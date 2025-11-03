@@ -143,14 +143,30 @@ export function TermsPanel({ onPickTerm }) {
           <button
             onClick={() => setSearch('')}
             style={{
-              ...ds.createStyles.button('secondary'),
+              minWidth: '72px',
+              padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
+              background: ds.colors.gray[100],
+              color: ds.colors.text.secondary,
+              border: `1.5px solid ${ds.colors.gray[300]}`,
+              borderRadius: ds.borderRadius.md,
+              fontSize: ds.fontSize.sm,
+              fontWeight: ds.fontWeight.semibold,
+              cursor: 'pointer',
+              transition: ds.transitions.fast,
+              boxShadow: ds.shadows.sm,
               flexShrink: 0
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = ds.colors.gray[200];
+              e.currentTarget.style.borderColor = ds.colors.gray[400];
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = ds.shadows.md;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = ds.colors.gray[100];
+              e.currentTarget.style.borderColor = ds.colors.gray[300];
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = ds.shadows.sm;
             }}
           >
             Clear

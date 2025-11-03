@@ -1,10 +1,11 @@
-// src/App.jsx - Redesigned with Header + Footer + Fixed Layout
+// src/App.jsx - Updated for RelatedTerms v2
 import { useState, useCallback } from 'react';
 import { TermsPanel } from './components/TermsPanel';
 import { QueryBuilder } from './components/QueryBuilderModern';
 import { QueryResults } from './components/QueryResultsModern';
 import { NiiViewer } from './components/NiiViewer';
 import { SavedStudies } from './components/SavedStudies';
+import { RelatedTerms } from './components/RelatedTerms';
 import { useUrlQueryState } from './hooks/useUrlQueryState';
 import ds from './styles/designSystem';
 import './App.css';
@@ -39,6 +40,11 @@ export default function App() {
     a.click();
     URL.revokeObjectURL(url);
   }, [savedStudies]);
+
+  // 處理從 RelatedTerms 選擇 term
+  const handleRelatedTermClick = useCallback((term) => {
+    setQuery((q) => (q ? `${q} ${term}` : term));
+  }, [setQuery]);
 
   return (
     <div style={{
@@ -79,7 +85,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area - 修正：增加右側欄位寬度 */}
+      {/* Main Content Area */}
       <main style={{
         flex: 1,
         padding: ds.spacing.xl,
@@ -90,23 +96,27 @@ export default function App() {
         boxSizing: 'border-box',
         minHeight: 'calc(100vh - 120px)'
       }}>
-        {/* Left Panel - Terms (Sticky，內部滾動) - 修正：移除 overflow: hidden */}
+        {/* Left Panel - Terms (Sticky，內部滾動) */}
         <div style={{
           position: 'sticky',
           top: 'calc(80px + 1.5rem)',
           maxHeight: 'calc(100vh - 120px)'
-          // 移除 overflow: hidden，讓內部的 TermsPanel 可以滾動
         }}>
           <TermsPanel onPickTerm={handleTermClick} />
         </div>
 
-        {/* Middle Panel - Query Builder + Results (自然流動) */}
+        {/* Middle Panel - Query Builder + Related Terms + Results (自然流動) */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: ds.spacing.xl
         }}>
           <QueryBuilder query={query} setQuery={setQuery} />
+          {/* 傳遞 query 而不是 selectedTerm */}
+          <RelatedTerms 
+            query={query}
+            onSelectTerm={handleRelatedTermClick}
+          />
           <QueryResults query={query} onSaveStudy={handleSaveStudy} />
         </div>
 

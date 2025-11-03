@@ -1,4 +1,4 @@
-// src/components/QueryBuilderModern.jsx - Updated with blue background header/
+// src/components/QueryBuilderModern.jsx - Updated with blue background header
 import ds from '../styles/designSystem';
 
 export function QueryBuilder({ query, setQuery }) {
@@ -47,8 +47,8 @@ export function QueryBuilder({ query, setQuery }) {
       
       {/* Content */}
       <div style={{ padding: ds.spacing.xl }}>
-        {/* Input */}
-        <div style={{ marginBottom: ds.spacing.lg }}>
+        {/* Input with Reset button */}
+        <div style={{ marginBottom: ds.spacing.lg, display: 'flex', gap: ds.spacing.sm }}>
           <input
             type="text"
             value={query}
@@ -57,7 +57,7 @@ export function QueryBuilder({ query, setQuery }) {
             placeholder="e.g., emotion AND memory NOT anxiety"
             style={{
               ...ds.components.input,
-              width: '100%',
+              flex: 1,
               padding: `${ds.spacing.md} ${ds.spacing.lg}`,
               fontSize: ds.fontSize.sm,
               fontWeight: ds.fontWeight.normal
@@ -71,6 +71,37 @@ export function QueryBuilder({ query, setQuery }) {
               e.target.style.boxShadow = 'none';
             }}
           />
+          <button
+            onClick={() => setQuery('')}
+            style={{
+              minWidth: '72px',
+              padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
+              background: ds.colors.gray[100],
+              color: ds.colors.text.secondary,
+              border: `1.5px solid ${ds.colors.gray[300]}`,
+              borderRadius: ds.borderRadius.md,
+              fontSize: ds.fontSize.sm,
+              fontWeight: ds.fontWeight.semibold,
+              cursor: 'pointer',
+              transition: ds.transitions.fast,
+              boxShadow: ds.shadows.sm,
+              flexShrink: 0
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = ds.colors.gray[200];
+              e.currentTarget.style.borderColor = ds.colors.gray[400];
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = ds.shadows.md;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = ds.colors.gray[100];
+              e.currentTarget.style.borderColor = ds.colors.gray[300];
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = ds.shadows.sm;
+            }}
+          >
+            Reset
+          </button>
         </div>
 
         {/* Operators */}
@@ -119,36 +150,6 @@ export function QueryBuilder({ query, setQuery }) {
               {op}
             </button>
           ))}
-          <button
-            onClick={() => setQuery('')}
-            style={{
-              minWidth: '72px',
-              padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
-              background: ds.colors.gray[100],
-              color: ds.colors.text.secondary,
-              border: `1.5px solid ${ds.colors.gray[300]}`,
-              borderRadius: ds.borderRadius.md,
-              fontSize: ds.fontSize.sm,
-              fontWeight: ds.fontWeight.semibold,
-              cursor: 'pointer',
-              transition: ds.transitions.fast,
-              boxShadow: ds.shadows.sm
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = ds.colors.gray[200];
-              e.currentTarget.style.borderColor = ds.colors.gray[400];
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = ds.shadows.md;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = ds.colors.gray[100];
-              e.currentTarget.style.borderColor = ds.colors.gray[300];
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = ds.shadows.sm;
-            }}
-          >
-            Reset
-          </button>
         </div>
 
         {/* Tip */}

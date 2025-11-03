@@ -361,7 +361,7 @@ export function NiiViewer({ query }) {
               margin: 0,
               lineHeight: ds.lineHeight.tight
             }}>
-              Brain Viewer
+              NIfTI visualization
             </h2>
             <p style={{
               fontSize: ds.fontSize.xs,
@@ -369,7 +369,7 @@ export function NiiViewer({ query }) {
               margin: `${ds.spacing.xs} 0 0 0`,
               fontWeight: ds.fontWeight.medium
             }}>
-              Interactive NIfTI visualization
+              Ajust the setting based on your needs.
             </p>
           </div>
           {query && mapUrl && (
