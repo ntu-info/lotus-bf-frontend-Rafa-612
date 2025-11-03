@@ -1,177 +1,231 @@
+// src/App.jsx - Redesigned with Header + Footer + Fixed Layout
+import { useState, useCallback } from 'react';
+import { TermsPanel } from './components/TermsPanel';
+import { QueryBuilder } from './components/QueryBuilderModern';
+import { QueryResults } from './components/QueryResultsModern';
+import { NiiViewer } from './components/NiiViewer';
+import { SavedStudies } from './components/SavedStudies';
+import { useUrlQueryState } from './hooks/useUrlQueryState';
+import ds from './styles/designSystem';
+import './App.css';
 
-import { useCallback, useRef, useState } from 'react'
-import { Terms } from './components/Terms'
-import { QueryBuilder } from './components/QueryBuilder'
-import { Studies } from './components/Studies'
-import { NiiViewer } from './components/NiiViewer'
-import { useUrlQueryState } from './hooks/useUrlQueryState'
-import './App.css'
+export default function App() {
+  const [query, setQuery] = useUrlQueryState('q');
+  const [savedStudies, setSavedStudies] = useState([]);
 
-export default function App () {
-  const [query, setQuery] = useUrlQueryState('q')
+  const handleTermClick = useCallback((term) => {
+    setQuery((q) => (q ? `${q} ${term}` : term));
+  }, [setQuery]);
 
-  const handlePickTerm = useCallback((t) => {
-    setQuery((q) => (q ? `${q} ${t}` : t))
-  }, [setQuery])
+  const handleSaveStudy = useCallback((study) => {
+    setSavedStudies(prev => {
+      const id = study.pmid || study.title;
+      if (prev.find(s => (s.pmid || s.title) === id)) return prev;
+      return [...prev, { ...study, savedId: Date.now() }];
+    });
+  }, []);
 
-  // --- resizable panes state ---
-  const gridRef = useRef(null)
-  const [sizes, setSizes] = useState([28, 44, 28]) // [left, middle, right]
-  const MIN_PX = 240
+  const handleRemoveStudy = useCallback((savedId) => {
+    setSavedStudies(prev => prev.filter(s => s.savedId !== savedId));
+  }, []);
 
-  const startDrag = (which, e) => {
-    e.preventDefault()
-    const startX = e.clientX
-    const rect = gridRef.current.getBoundingClientRect()
-    const total = rect.width
-    const curPx = sizes.map(p => (p / 100) * total)
-
-    const onMouseMove = (ev) => {
-      const dx = ev.clientX - startX
-      if (which === 0) {
-        let newLeft = curPx[0] + dx
-        let newMid = curPx[1] - dx
-        if (newLeft < MIN_PX) { newMid -= (MIN_PX - newLeft); newLeft = MIN_PX }
-        if (newMid < MIN_PX) { newLeft -= (MIN_PX - newMid); newMid = MIN_PX }
-        const s0 = (newLeft / total) * 100
-        const s1 = (newMid / total) * 100
-        const s2 = 100 - s0 - s1
-        setSizes([s0, s1, Math.max(s2, 0)])
-      } else {
-        let newMid = curPx[1] + dx
-        let newRight = curPx[2] - dx
-        if (newMid < MIN_PX) { newRight -= (MIN_PX - newMid); newMid = MIN_PX }
-        if (newRight < MIN_PX) { newMid -= (MIN_PX - newRight); newRight = MIN_PX }
-        const s1 = (newMid / total) * 100
-        const s2 = (newRight / total) * 100
-        const s0 = (curPx[0] / total) * 100
-        setSizes([s0, s1, Math.max(s2, 0)])
-      }
-    }
-    const onMouseUp = () => {
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-    }
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-  }
+  const handleExport = useCallback(() => {
+    const data = JSON.stringify(savedStudies, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `saved_studies_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [savedStudies]);
 
   return (
-    <div className="app">
-      {/* Inline style injection to enforce no-hover look */}
-      <style>{`
-        :root {
-          --primary-600: #2563eb;
-          --primary-700: #1d4ed8;
-          --primary-800: #1e40af;
-          --border: #e5e7eb;
-        }
-        .app { padding-right: 0 !important; }
-        .app__grid { width: 100vw; max-width: 100vw; }
-        .card input[type="text"],
-        .card input[type="search"],
-        .card input[type="number"],
-        .card select,
-        .card textarea {
-          width: 100% !important;
-          max-width: 100% !important;
-          display: block;
-        }
-        /* Downsized buttons */
-        .card button,
-        .card [role="button"],
-        .card .btn,
-        .card .button {
-          font-size: 12px !important;
-          padding: 4px 8px !important;
-          border-radius: 8px !important;
-          line-height: 1.2 !important;
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          border: none !important;
-        }
-        /* No visual change on hover/active */
-        .card button:hover,
-        .card button:active,
-        .card [role="button"]:hover,
-        .card [role="button"]:active,
-        .card .btn:hover,
-        .card .btn:active,
-        .card .button:hover,
-        .card .button:active {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-        }
-        /* Toolbars / chips also no-hover */
-        .card .toolbar button,
-        .card .toolbar [role="button"],
-        .card .toolbar .btn,
-        .card .toolbar .button,
-        .card .qb-toolbar button,
-        .card .qb-toolbar [role="button"],
-        .card .qb-toolbar .btn,
-        .card .qb-toolbar .button,
-        .card .query-builder button,
-        .card .query-builder [role="button"],
-        .card .query-builder .btn,
-        .card .query-builder .button,
-        .card .chip,
-        .card .pill,
-        .card .tag {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          border: none !important;
-        }
-        .card .toolbar button:hover,
-        .card .qb-toolbar button:hover,
-        .card .query-builder button:hover,
-        .card .chip:hover,
-        .card .pill:hover,
-        .card .tag:hover,
-        .card .toolbar button:active,
-        .card .qb-toolbar button:active,
-        .card .query-builder button:active {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-        }
-        /* Disabled stays same color but dimmer for affordance */
-        .card .toolbar button:disabled,
-        .card .qb-toolbar button:disabled,
-        .card .query-builder button:disabled,
-        .card button[disabled],
-        .card [aria-disabled="true"] {
-          background: var(--primary-600) !important;
-          color: #fff !important;
-          opacity: .55 !important;
-        }
-      `}</style>
-
-      <header className="app__header">
-        <h1 className="app__title">LoTUS-BF</h1>
-        <div className="app__subtitle">Location-or-Term Unified Search for Brain Functions</div>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      background: `linear-gradient(to bottom right, ${ds.colors.gray[50]}, ${ds.colors.gray[100]})`,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+    }}>
+      {/* Header - 吸頂 */}
+      <header style={{
+        ...ds.components.header,
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
+      }}>
+        <div style={{
+          maxWidth: '100%',
+          margin: '0 auto'
+        }}>
+          <h1 style={{
+            fontSize: ds.fontSize['2xl'],
+            fontWeight: ds.fontWeight.bold,
+            color: ds.colors.primary[600],
+            margin: 0,
+            letterSpacing: '-0.025em'
+          }}>
+            LoTUS-BF
+          </h1>
+          <p style={{
+            fontSize: ds.fontSize.sm,
+            color: ds.colors.text.tertiary,
+            margin: `${ds.spacing.xs} 0 0 0`,
+            fontWeight: ds.fontWeight.medium
+          }}>
+            Location-or-Term Unified Search for Brain Functions
+          </p>
+        </div>
       </header>
 
-      <main className="app__grid" ref={gridRef}>
-        <section className="card" style={{ flexBasis: `${sizes[0]}%` }}>
-          <div className="card__title">Terms</div>
-          <Terms onPickTerm={handlePickTerm} />
-        </section>
+      {/* Main Content Area - 允許內容超出視窗，可滾動 */}
+      <main style={{
+        flex: 1,
+        padding: ds.spacing.xl,
+        display: 'grid',
+        gridTemplateColumns: 'minmax(280px, 24%) minmax(400px, 48%) minmax(320px, 28%)',
+        gap: ds.spacing.xl,
+        alignItems: 'start',
+        boxSizing: 'border-box',
+        minHeight: 'calc(100vh - 120px)' // 確保有足夠高度讓 Footer 在底部
+      }}>
+        {/* Left Panel - Terms (Sticky，內部滾動) */}
+        <div style={{
+          position: 'sticky',
+          top: 'calc(80px + 1.5rem)', // Header 高度 + padding
+          maxHeight: 'calc(100vh - 120px)',
+          overflow: 'hidden'
+        }}>
+          <TermsPanel onPickTerm={handleTermClick} />
+        </div>
 
-        <div className="resizer" aria-label="Resize left/middle" onMouseDown={(e) => startDrag(0, e)} />
-
-        <section className="card card--stack" style={{ flexBasis: `${sizes[1]}%` }}>
+        {/* Middle Panel - Query Builder + Results (自然流動) */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: ds.spacing.xl
+        }}>
           <QueryBuilder query={query} setQuery={setQuery} />
-          {/* <div className="hint">Current Query：<code className="hint__code">{query || '(empty)'}</code></div> */}
-          <div className="divider" />
-          <Studies query={query} />
-        </section>
+          <QueryResults query={query} onSaveStudy={handleSaveStudy} />
+        </div>
 
-        <div className="resizer" aria-label="Resize middle/right" onMouseDown={(e) => startDrag(1, e)} />
-
-        <section className="card" style={{ flexBasis: `${sizes[2]}%` }}>
+        {/* Right Panel - Viewer + Saved Studies (自然流動) */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: ds.spacing.xl
+        }}>
           <NiiViewer query={query} />
-        </section>
+          <SavedStudies
+            savedStudies={savedStudies}
+            onRemove={handleRemoveStudy}
+            onExport={handleExport}
+          />
+        </div>
       </main>
+
+      {/* Footer - 內容底部，需滾動才能看到 */}
+      <footer style={{
+        background: ds.colors.background.primary,
+        borderTop: `1px solid ${ds.colors.gray[200]}`,
+        padding: `${ds.spacing.lg} ${ds.spacing.xl}`,
+        marginTop: ds.spacing['2xl']
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: ds.fontSize.xs,
+          color: ds.colors.text.tertiary
+        }}>
+          <div style={{ display: 'flex', gap: ds.spacing.lg, alignItems: 'center' }}>
+            <span style={{ fontWeight: ds.fontWeight.medium }}>
+              © 2025 LoTUS-BF
+            </span>
+            <span style={{ color: ds.colors.gray[300] }}>|</span>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: ds.colors.primary[600],
+                textDecoration: 'none',
+                fontWeight: ds.fontWeight.medium,
+                transition: ds.transitions.fast
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = ds.colors.primary[700];
+                e.currentTarget.style.textDecoration = 'underline';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = ds.colors.primary[600];
+                e.currentTarget.style.textDecoration = 'none';
+              }}
+            >
+              GitHub
+            </a>
+            <span style={{ color: ds.colors.gray[300] }}>|</span>
+            <a
+              href="https://docs.example.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: ds.colors.primary[600],
+                textDecoration: 'none',
+                fontWeight: ds.fontWeight.medium,
+                transition: ds.transitions.fast
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = ds.colors.primary[700];
+                e.currentTarget.style.textDecoration = 'underline';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = ds.colors.primary[600];
+                e.currentTarget.style.textDecoration = 'none';
+              }}
+            >
+              Documentation
+            </a>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            gap: ds.spacing.sm,
+            alignItems: 'center'
+          }}>
+            <span>Powered by</span>
+            <span style={{ 
+              fontWeight: ds.fontWeight.semibold,
+              color: ds.colors.text.secondary 
+            }}>
+              Neurosynth
+            </span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 1200px) {
+          main {
+            grid-template-columns: 250px 1fr 300px !important;
+            gap: ${ds.spacing.lg} !important;
+            padding: ${ds.spacing.lg} !important;
+          }
+        }
+        
+        @media (max-width: 1024px) {
+          main {
+            grid-template-columns: 1fr !important;
+            padding: ${ds.spacing.md} !important;
+          }
+          
+          main > div:first-child {
+            position: static !important;
+            max-height: none !important;
+          }
+        }
+      `}</style>
     </div>
-  )
+  );
 }
