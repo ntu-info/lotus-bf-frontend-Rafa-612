@@ -1,4 +1,4 @@
-// src/components/QueryBuilderModern.jsx - Updated with blue background header
+// src/components/QueryBuilderModern.jsx - Updated with blue background header/
 import ds from '../styles/designSystem';
 
 export function QueryBuilder({ query, setQuery }) {

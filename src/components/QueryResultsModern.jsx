@@ -1,4 +1,4 @@
-// src/components/QueryResultsModern.jsx - Updated version
+// src/components/QueryResultsModern.jsx - Updated version/
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';

@@ -1,5 +1,5 @@
 import { API_BASE } from '../api'
-// Locations.jsx
+// Locations.jsx/
 import { useEffect, useMemo, useState } from 'react'
 
 function cls (...xs) { return xs.filter(Boolean).join(' ') }

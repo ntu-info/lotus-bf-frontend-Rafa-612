@@ -42,7 +42,7 @@ export function TermsPanel({ onPickTerm }) {
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   }, [terms, search]);
 
-  // 監聽滾動事件，接近底部時載入更多
+  // 監聽滾動事件，接近底部時載入更多/
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
