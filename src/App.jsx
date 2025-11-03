@@ -79,23 +79,23 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area - 允許內容超出視窗，可滾動 */}
+      {/* Main Content Area - 修正：增加右側欄位寬度 */}
       <main style={{
         flex: 1,
         padding: ds.spacing.xl,
         display: 'grid',
-        gridTemplateColumns: 'minmax(280px, 24%) minmax(400px, 48%) minmax(320px, 28%)',
+        gridTemplateColumns: 'minmax(280px, 22%) minmax(400px, 46%) minmax(340px, 32%)',
         gap: ds.spacing.xl,
         alignItems: 'start',
         boxSizing: 'border-box',
-        minHeight: 'calc(100vh - 120px)' // 確保有足夠高度讓 Footer 在底部
+        minHeight: 'calc(100vh - 120px)'
       }}>
-        {/* Left Panel - Terms (Sticky，內部滾動) */}
+        {/* Left Panel - Terms (Sticky，內部滾動) - 修正：移除 overflow: hidden */}
         <div style={{
           position: 'sticky',
-          top: 'calc(80px + 1.5rem)', // Header 高度 + padding
-          maxHeight: 'calc(100vh - 120px)',
-          overflow: 'hidden'
+          top: 'calc(80px + 1.5rem)',
+          maxHeight: 'calc(100vh - 120px)'
+          // 移除 overflow: hidden，讓內部的 TermsPanel 可以滾動
         }}>
           <TermsPanel onPickTerm={handleTermClick} />
         </div>
@@ -125,51 +125,25 @@ export default function App() {
         </div>
       </main>
 
-      {/* Footer - 內容底部，需滾動才能看到 */}
+      {/* Footer */}
       <footer style={{
-        background: ds.colors.background.primary,
+        padding: ds.spacing.lg,
         borderTop: `1px solid ${ds.colors.gray[200]}`,
-        padding: `${ds.spacing.lg} ${ds.spacing.xl}`,
-        marginTop: ds.spacing['2xl']
+        background: ds.colors.background.primary,
+        marginTop: 'auto'
       }}>
         <div style={{
+          maxWidth: '100%',
+          margin: '0 auto',
           display: 'flex',
-          alignItems: 'center',
           justifyContent: 'space-between',
+          alignItems: 'center',
           fontSize: ds.fontSize.xs,
           color: ds.colors.text.tertiary
         }}>
-          <div style={{ display: 'flex', gap: ds.spacing.lg, alignItems: 'center' }}>
-            <span style={{ fontWeight: ds.fontWeight.medium }}>
-              © 2025 LoTUS-BF
-            </span>
-            <span style={{ color: ds.colors.gray[300] }}>|</span>
+          <div style={{ display: 'flex', gap: ds.spacing.md }}>
             <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: ds.colors.primary[600],
-                textDecoration: 'none',
-                fontWeight: ds.fontWeight.medium,
-                transition: ds.transitions.fast
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = ds.colors.primary[700];
-                e.currentTarget.style.textDecoration = 'underline';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = ds.colors.primary[600];
-                e.currentTarget.style.textDecoration = 'none';
-              }}
-            >
-              GitHub
-            </a>
-            <span style={{ color: ds.colors.gray[300] }}>|</span>
-            <a
-              href="https://docs.example.com"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#"
               style={{
                 color: ds.colors.primary[600],
                 textDecoration: 'none',

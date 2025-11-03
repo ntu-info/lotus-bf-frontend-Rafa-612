@@ -1,4 +1,4 @@
-// src/components/NiiViewer.jsx - Redesigned with Design System
+// src/components/NiiViewer.jsx - Updated with new button styles
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as nifti from 'nifti-reader-js';
 import { API_BASE } from '../api';
@@ -55,7 +55,6 @@ export function NiiViewer({ query }) {
     return u.toString();
   }, [query, voxel, fwhm, kernel, r]);
 
-  // Utility functions (keeping existing logic)
   function asTypedArray(header, buffer) {
     switch (header.datatypeCode) {
       case nifti.NIFTI1.TYPE_INT8: return new Int8Array(buffer);
@@ -160,7 +159,6 @@ export function NiiViewer({ query }) {
     return Math.max(0, Math.min(n-1, idx));
   };
 
-  // Load background
   useEffect(() => {
     let alive = true;
     setLoadingBG(true); setErrBG('');
@@ -186,7 +184,6 @@ export function NiiViewer({ query }) {
     return () => { alive = false };
   }, []);
 
-  // Load map
   useEffect(() => {
     if (!mapUrl) { mapRef.current = null; return }
     let alive = true;
@@ -281,7 +278,6 @@ export function NiiViewer({ query }) {
     }
     ctx.putImageData(img, 0, 0);
 
-    // Draw crosshairs
     ctx.save();
     ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 1.5;
@@ -351,7 +347,6 @@ export function NiiViewer({ query }) {
       padding: 0,
       overflow: 'hidden'
     }}>
-      {/* Header */}
       <div style={{
         padding: ds.spacing.xl,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
@@ -382,20 +377,42 @@ export function NiiViewer({ query }) {
               href={mapUrl}
               download
               style={{
-                ...ds.createStyles.button('primary'),
-                textDecoration: 'none',
-                fontSize: ds.fontSize.xs
+                display: 'flex',
+                alignItems: 'center',
+                gap: ds.spacing.sm,
+                padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
+                background: ds.colors.primary[600],
+                color: ds.colors.text.inverse,
+                border: 'none',
+                borderRadius: ds.borderRadius.md,
+                fontSize: ds.fontSize.xs,
+                fontWeight: ds.fontWeight.semibold,
+                cursor: 'pointer',
+                transition: ds.transitions.fast,
+                boxShadow: ds.shadows.sm,
+                textDecoration: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = ds.colors.primary[700];
+                e.currentTarget.style.boxShadow = ds.shadows.md;
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = ds.colors.primary[600];
+                e.currentTarget.style.boxShadow = ds.shadows.sm;
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
+              <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
               Download Map
             </a>
           )}
         </div>
       </div>
 
-      {/* Content */}
       <div style={{ padding: ds.spacing.xl }}>
-        {/* Controls */}
         <div style={{
           background: ds.colors.gray[50],
           borderRadius: ds.borderRadius.md,
@@ -403,7 +420,6 @@ export function NiiViewer({ query }) {
           marginBottom: ds.spacing.lg,
           border: `1px solid ${ds.colors.gray[200]}`
         }}>
-          {/* Coordinates */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
@@ -443,7 +459,6 @@ export function NiiViewer({ query }) {
             ))}
           </div>
 
-          {/* Threshold & Controls Grid */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
@@ -459,18 +474,71 @@ export function NiiViewer({ query }) {
               }}>
                 Threshold Mode
               </label>
-              <select
-                value={thrMode}
-                onChange={e=>setThrMode(e.target.value)}
-                style={{
-                  ...ds.components.input,
-                  width: '100%',
-                  fontSize: ds.fontSize.sm
-                }}
-              >
-                <option value='value'>Value</option>
-                <option value='pctl'>Percentile</option>
-              </select>
+              <div style={{
+                display: 'flex',
+                gap: ds.spacing.xs
+              }}>
+                <button
+                  onClick={() => setThrMode('pctl')}
+                  style={{
+                    flex: 1,
+                    padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+                    background: thrMode === 'pctl' ? ds.colors.primary[600] : ds.colors.background.primary,
+                    color: thrMode === 'pctl' ? ds.colors.text.inverse : ds.colors.text.primary,
+                    border: `1.5px solid ${thrMode === 'pctl' ? ds.colors.primary[600] : ds.colors.gray[300]}`,
+                    borderRadius: ds.borderRadius.md,
+                    fontSize: ds.fontSize.sm,
+                    fontWeight: ds.fontWeight.semibold,
+                    cursor: 'pointer',
+                    transition: ds.transitions.fast,
+                    boxShadow: thrMode === 'pctl' ? ds.shadows.sm : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (thrMode !== 'pctl') {
+                      e.currentTarget.style.background = ds.colors.gray[50];
+                      e.currentTarget.style.borderColor = ds.colors.primary[500];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (thrMode !== 'pctl') {
+                      e.currentTarget.style.background = ds.colors.background.primary;
+                      e.currentTarget.style.borderColor = ds.colors.gray[300];
+                    }
+                  }}
+                >
+                  Percentile
+                </button>
+                <button
+                  onClick={() => setThrMode('value')}
+                  style={{
+                    flex: 1,
+                    padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+                    background: thrMode === 'value' ? ds.colors.primary[600] : ds.colors.background.primary,
+                    color: thrMode === 'value' ? ds.colors.text.inverse : ds.colors.text.primary,
+                    border: `1.5px solid ${thrMode === 'value' ? ds.colors.primary[600] : ds.colors.gray[300]}`,
+                    borderRadius: ds.borderRadius.md,
+                    fontSize: ds.fontSize.sm,
+                    fontWeight: ds.fontWeight.semibold,
+                    cursor: 'pointer',
+                    transition: ds.transitions.fast,
+                    boxShadow: thrMode === 'value' ? ds.shadows.sm : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (thrMode !== 'value') {
+                      e.currentTarget.style.background = ds.colors.gray[50];
+                      e.currentTarget.style.borderColor = ds.colors.primary[500];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (thrMode !== 'value') {
+                      e.currentTarget.style.background = ds.colors.background.primary;
+                      e.currentTarget.style.borderColor = ds.colors.gray[300];
+                    }
+                  }}
+                >
+                  Value
+                </button>
+              </div>
             </div>
 
             {thrMode === 'value' ? (
@@ -569,7 +637,6 @@ export function NiiViewer({ query }) {
           </div>
         </div>
 
-        {/* Loading/Error */}
         {(loadingBG || loadingMap) && (
           <div style={{ padding: ds.spacing['2xl'], textAlign: 'center' }}>
             <div style={{
@@ -607,8 +674,7 @@ export function NiiViewer({ query }) {
           </div>
         )}
 
-        {/* Brain Views */}
-        {!!nx && !loadingBG && !loadingMap && (
+        {nx && !loadingBG && !loadingMap && (
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',

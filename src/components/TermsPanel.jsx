@@ -1,5 +1,5 @@
-// src/components/TermsPanel.jsx - Redesigned with Design System
-import { useEffect, useMemo, useState } from 'react';
+// src/components/TermsPanel.jsx - With infinite scroll
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';
 
@@ -8,6 +8,8 @@ export function TermsPanel({ onPickTerm }) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [displayCount, setDisplayCount] = useState(100); // 初始顯示 100 個
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -40,12 +42,29 @@ export function TermsPanel({ onPickTerm }) {
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   }, [terms, search]);
 
+  // 監聽滾動事件，接近底部時載入更多
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    
+    // 當滾動到距離底部 100px 時，載入更多
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      setDisplayCount(prev => Math.min(prev + 50, filtered.length));
+    }
+  }, [filtered.length]);
+
+  // 當搜尋改變時，重置顯示數量
+  useEffect(() => {
+    setDisplayCount(100);
+  }, [search]);
+
   return (
     <div style={{
       ...ds.createStyles.card(),
       display: 'flex',
       flexDirection: 'column',
-      height: '100%',
+      height: 'calc(100vh - 140px)',
+      maxHeight: '1200px',
       padding: 0,
       overflow: 'hidden'
     }}>
@@ -53,7 +72,8 @@ export function TermsPanel({ onPickTerm }) {
       <div style={{
         padding: ds.spacing.xl,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
-        background: ds.colors.primary[50]
+        background: ds.colors.primary[50],
+        flexShrink: 0
       }}>
         <h2 style={{
           fontSize: ds.fontSize.lg,
@@ -77,7 +97,8 @@ export function TermsPanel({ onPickTerm }) {
       {/* Search Bar */}
       <div style={{
         padding: ds.spacing.xl,
-        borderBottom: `1px solid ${ds.colors.gray[100]}`
+        borderBottom: `1px solid ${ds.colors.gray[100]}`,
+        flexShrink: 0
       }}>
         <div style={{ display: 'flex', gap: ds.spacing.sm }}>
           <div style={{ position: 'relative', flex: 1 }}>
@@ -141,7 +162,12 @@ export function TermsPanel({ onPickTerm }) {
       {loading && (
         <div style={{
           padding: ds.spacing['2xl'],
-          textAlign: 'center'
+          textAlign: 'center',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
           <div style={{
             width: '32px',
@@ -149,7 +175,6 @@ export function TermsPanel({ onPickTerm }) {
             border: `3px solid ${ds.colors.primary[200]}`,
             borderTopColor: ds.colors.primary[600],
             borderRadius: ds.borderRadius.full,
-            margin: '0 auto',
             animation: 'spin 0.8s linear infinite'
           }} />
           <p style={{
@@ -172,20 +197,26 @@ export function TermsPanel({ onPickTerm }) {
           border: `1px solid ${ds.colors.error}40`,
           background: `${ds.colors.error}10`,
           color: ds.colors.error,
-          fontSize: ds.fontSize.sm
+          fontSize: ds.fontSize.sm,
+          flex: 1
         }}>
           <strong style={{ fontWeight: ds.fontWeight.semibold }}>Error:</strong> {err}
         </div>
       )}
 
-      {/* Terms List */}
+      {/* Terms List - 無限滾動 */}
       {!loading && !err && (
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
-          minHeight: 0
-        }}>
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
+            minHeight: 0
+          }}
+        >
           {filtered.length === 0 ? (
             <div style={{
               textAlign: 'center',
@@ -197,12 +228,11 @@ export function TermsPanel({ onPickTerm }) {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: ds.spacing.xs }}>
-              {filtered.slice(0, 500).map((t, idx) => (
+              {filtered.slice(0, displayCount).map((t, idx) => (
                 <button
                   key={`${t}-${idx}`}
                   onClick={() => {
                     onPickTerm?.(t);
-                    setSearch(t); // 直接複製到 search bar
                   }}
                   style={{
                     width: '100%',
@@ -229,6 +259,17 @@ export function TermsPanel({ onPickTerm }) {
                   {t}
                 </button>
               ))}
+              {/* 載入更多提示 */}
+              {displayCount < filtered.length && (
+                <div style={{
+                  textAlign: 'center',
+                  padding: ds.spacing.md,
+                  color: ds.colors.text.tertiary,
+                  fontSize: ds.fontSize.xs
+                }}>
+                  Scroll down to load more...
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -242,9 +283,10 @@ export function TermsPanel({ onPickTerm }) {
           background: ds.colors.gray[50],
           fontSize: ds.fontSize.xs,
           color: ds.colors.text.tertiary,
-          fontWeight: ds.fontWeight.medium
+          fontWeight: ds.fontWeight.medium,
+          flexShrink: 0
         }}>
-          {filtered.length} {filtered.length === 1 ? 'term' : 'terms'}
+          Showing {Math.min(displayCount, filtered.length)} of {filtered.length} {filtered.length === 1 ? 'term' : 'terms'}
           {search && ` matching "${search}"`}
         </div>
       )}

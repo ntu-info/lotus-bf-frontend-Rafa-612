@@ -1,7 +1,46 @@
-// src/components/QueryResultsModern.jsx - Redesigned with Design System
+// src/components/QueryResultsModern.jsx - Updated version
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';
+
+// Helper function to highlight matching terms in title
+function highlightTerms(title, query) {
+  if (!title || !query) return title;
+  
+  // Extract individual terms from query (remove operators and parentheses)
+  const terms = query
+    .replace(/\(|\)/g, ' ')
+    .split(/\s+/)
+    .filter(term => term && !['AND', 'OR', 'NOT', 'and', 'or', 'not'].includes(term))
+    .map(term => term.toLowerCase().trim());
+  
+  if (terms.length === 0) return title;
+  
+  // Create regex pattern for all terms
+  const pattern = new RegExp(`(${terms.join('|')})`, 'gi');
+  const parts = title.split(pattern);
+  
+  return parts.map((part, idx) => {
+    const isMatch = terms.some(term => part.toLowerCase() === term);
+    if (isMatch) {
+      return (
+        <mark
+          key={idx}
+          style={{
+            background: ds.colors.primary[100],
+            color: ds.colors.primary[800],
+            fontWeight: ds.fontWeight.bold,
+            padding: '2px 4px',
+            borderRadius: '3px'
+          }}
+        >
+          {part}
+        </mark>
+      );
+    }
+    return part;
+  });
+}
 
 export function QueryResults({ query, onSaveStudy }) {
   const [studies, setStudies] = useState([]);
@@ -48,55 +87,30 @@ export function QueryResults({ query, onSaveStudy }) {
       padding: 0,
       overflow: 'hidden'
     }}>
-      {/* Header */}
+      {/* Header - 移除 Query 顯示 */}
       <div style={{
         padding: ds.spacing.xl,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
         background: ds.colors.primary[50]
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: ds.spacing.md
-        }}>
-          <div>
-            <h2 style={{
-              fontSize: ds.fontSize.lg,
-              fontWeight: ds.fontWeight.bold,
-              color: ds.colors.text.primary,
-              margin: 0,
-              lineHeight: ds.lineHeight.tight
-            }}>
-              Query Results
-            </h2>
-            <p style={{
-              fontSize: ds.fontSize.xs,
-              color: ds.colors.text.tertiary,
-              margin: `${ds.spacing.xs} 0 0 0`,
-              fontWeight: ds.fontWeight.medium
-            }}>
-              {studies.length} {studies.length === 1 ? 'study' : 'studies'} found
-            </p>
-          </div>
-          {query && (
-            <div style={{
-              fontSize: ds.fontSize.xs,
-              color: ds.colors.text.tertiary,
-              background: ds.colors.background.primary,
-              padding: `${ds.spacing.xs} ${ds.spacing.md}`,
-              borderRadius: ds.borderRadius.md,
-              border: `1px solid ${ds.colors.gray[200]}`,
-              fontFamily: 'monospace',
-              maxWidth: '300px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              <span style={{ fontWeight: ds.fontWeight.semibold, color: ds.colors.text.secondary }}>Query:</span> {query}
-            </div>
-          )}
+        <div>
+          <h2 style={{
+            fontSize: ds.fontSize.lg,
+            fontWeight: ds.fontWeight.bold,
+            color: ds.colors.text.primary,
+            margin: 0,
+            lineHeight: ds.lineHeight.tight
+          }}>
+            Query Results
+          </h2>
+          <p style={{
+            fontSize: ds.fontSize.xs,
+            color: ds.colors.text.tertiary,
+            margin: `${ds.spacing.xs} 0 0 0`,
+            fontWeight: ds.fontWeight.medium
+          }}>
+            {studies.length} {studies.length === 1 ? 'study' : 'studies'} found
+          </p>
         </div>
       </div>
 
@@ -223,59 +237,54 @@ export function QueryResults({ query, onSaveStudy }) {
                 key={idx} 
                 style={{
                   padding: ds.spacing.lg,
-                  borderBottom: idx < studies.length - 1 ? `1px solid ${ds.colors.gray[100]}` : 'none',
-                  transition: ds.transitions.fast,
-                  background: ds.colors.background.primary
+                  borderBottom: idx < studies.length - 1 ? `1px solid ${ds.colors.gray[200]}` : 'none',
+                  transition: ds.transitions.fast
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = ds.colors.gray[50];
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = ds.colors.background.primary;
-                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = ds.colors.gray[50]}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <div style={{
                   display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
-                  gap: ds.spacing.lg
+                  gap: ds.spacing.md,
+                  alignItems: 'flex-start'
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Title with highlighted terms */}
                     <h3 style={{
+                      fontSize: ds.fontSize.sm,
                       fontWeight: ds.fontWeight.semibold,
                       color: ds.colors.text.primary,
-                      marginBottom: ds.spacing.sm,
-                      lineHeight: ds.lineHeight.tight,
-                      fontSize: ds.fontSize.base
+                      marginBottom: ds.spacing.xs,
+                      lineHeight: ds.lineHeight.snug
                     }}>
-                      {study.title || 'Untitled Study'}
+                      {highlightTerms(study.title || 'Untitled study', query)}
                     </h3>
                     <p style={{
-                      fontSize: ds.fontSize.sm,
+                      fontSize: ds.fontSize.xs,
                       color: ds.colors.text.secondary,
-                      marginBottom: ds.spacing.sm,
-                      lineHeight: ds.lineHeight.normal
+                      marginBottom: ds.spacing.xs,
+                      lineHeight: ds.lineHeight.relaxed
                     }}>
                       {study.authors || 'Unknown authors'}
                     </p>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      flexWrap: 'wrap',
-                      gap: ds.spacing.md,
+                      gap: ds.spacing.sm,
                       fontSize: ds.fontSize.xs,
-                      color: ds.colors.text.tertiary
+                      color: ds.colors.text.tertiary,
+                      flexWrap: 'wrap'
                     }}>
                       <span style={{ fontWeight: ds.fontWeight.medium, color: ds.colors.text.secondary }}>
                         {study.journal || 'Unknown journal'}
                       </span>
                       <span style={{ color: ds.colors.gray[300] }}>•</span>
                       <span>{study.year || 'N/A'}</span>
-                      {study.pmid && (
+                      {(study.pmid || study.PMID || study.pubmed_id || study.id) && (
                         <>
                           <span style={{ color: ds.colors.gray[300] }}>•</span>
                           <a
-                            href={`https://pubmed.ncbi.nlm.nih.gov/${study.pmid}/`}
+                            href={`https://pubmed.ncbi.nlm.nih.gov/${study.pmid || study.PMID || study.pubmed_id || study.id}/`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -284,19 +293,22 @@ export function QueryResults({ query, onSaveStudy }) {
                               gap: ds.spacing.xs,
                               color: ds.colors.primary[600],
                               textDecoration: 'none',
-                              fontWeight: ds.fontWeight.medium,
-                              transition: ds.transitions.fast
+                              fontWeight: ds.fontWeight.semibold,
+                              transition: ds.transitions.fast,
+                              padding: '2px 8px',
+                              borderRadius: ds.borderRadius.sm,
+                              background: ds.colors.primary[50]
                             }}
                             onMouseEnter={(e) => {
+                              e.currentTarget.style.background = ds.colors.primary[100];
                               e.currentTarget.style.color = ds.colors.primary[700];
-                              e.currentTarget.style.textDecoration = 'underline';
                             }}
                             onMouseLeave={(e) => {
+                              e.currentTarget.style.background = ds.colors.primary[50];
                               e.currentTarget.style.color = ds.colors.primary[600];
-                              e.currentTarget.style.textDecoration = 'none';
                             }}
                           >
-                            <svg style={{ width: '12px', height: '12px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                             PubMed
