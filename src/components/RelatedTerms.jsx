@@ -101,8 +101,8 @@ export function RelatedTerms({ query, onSelectTerm }) {
     const sorted = [...relatedTerms];
     if (sortBy === 'count') {
       sorted.sort((a, b) => {
-        const countA = Number(a.count) || Number(a.co_occurrence) || Number(a.frequency) || 0;
-        const countB = Number(b.count) || Number(b.co_occurrence) || Number(b.frequency) || 0;
+        const countA = Number(a.co_count) || Number(a.count) || Number(a.co_occurrence) || Number(a.frequency) || 0;
+        const countB = Number(b.co_count) || Number(b.count) || Number(b.co_occurrence) || Number(b.frequency) || 0;
         console.log(`Sorting by count: ${a.term}=${countA}, ${b.term}=${countB}`);
         return countB - countA;
       });
@@ -118,7 +118,7 @@ export function RelatedTerms({ query, onSelectTerm }) {
 
   const getCount = (item) => {
     console.log('Getting count for:', item.term, 'Raw item:', item);
-    const count = item.count ?? item.co_occurrence ?? item.frequency ?? item.n ?? item.num;
+    const count = item.co_count ?? item.count ?? item.co_occurrence ?? item.frequency ?? item.n ?? item.num;
     console.log('  count field:', item.count);
     console.log('  co_occurrence field:', item.co_occurrence);
     console.log('  frequency field:', item.frequency);
@@ -357,7 +357,8 @@ export function RelatedTerms({ query, onSelectTerm }) {
             textAlign: 'center',
             padding: ds.spacing['2xl'],
             color: ds.colors.text.tertiary,
-            fontSize: ds.fontSize.sm
+            fontSize: ds.fontSize.sm,
+            height: "1000px"
           }}>
             No related terms found for "{selectedTargetTerm}"
           </div>
