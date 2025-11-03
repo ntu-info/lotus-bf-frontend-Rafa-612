@@ -1,4 +1,4 @@
-// src/components/TermsPanel.jsx - With infinite scroll
+// src/components/TermsPanel.jsx - With infinite scroll/
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';

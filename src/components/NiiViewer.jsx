@@ -1,4 +1,4 @@
-// src/components/NiiViewer.jsx - Updated with new button styles/
+// src/components/NiiViewer.jsx - Updated with new button styles
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as nifti from 'nifti-reader-js';
 import { API_BASE } from '../api';
