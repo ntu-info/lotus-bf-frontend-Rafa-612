@@ -1,4 +1,4 @@
-// src/components/RelatedTerms.jsx - Fixed version
+// src/components/RelatedTerms.jsx - Enhanced version with perfect design
 import { useEffect, useState, useMemo } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';
@@ -23,12 +23,18 @@ export function RelatedTerms({ query, onSelectTerm }) {
   useEffect(() => {
     if (queryTerms.length > 0 && !queryTerms.includes(selectedTargetTerm)) {
       setSelectedTargetTerm(queryTerms[0]);
+    } else if (queryTerms.length === 0) {
+      // Clear selected term when query is empty
+      setSelectedTargetTerm('');
+      setRelatedTerms([]);
     }
   }, [queryTerms, selectedTargetTerm]);
 
   useEffect(() => {
     if (!selectedTargetTerm) {
       setRelatedTerms([]);
+      setLoading(false);
+      setError('');
       return;
     }
 
@@ -40,53 +46,17 @@ export function RelatedTerms({ query, onSelectTerm }) {
       setError('');
       try {
         const url = `${API_BASE}/terms/${encodeURIComponent(selectedTargetTerm)}`;
-        console.log('=== Fetching Related Terms ===');
-        console.log('URL:', url);
-        
         const res = await fetch(url, { signal: ac.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!alive) return;
         
-        console.log('=== Raw API Response ===');
-        console.log('Full data:', JSON.stringify(data, null, 2));
-        console.log('Type of data:', typeof data);
-        console.log('Is array?', Array.isArray(data));
-        
-        let related = [];
-        if (Array.isArray(data?.related)) {
-          related = data.related;
-          console.log('Found data.related (array)');
-        } else if (Array.isArray(data?.terms)) {
-          related = data.terms;
-          console.log('Found data.terms (array)');
-        } else if (Array.isArray(data)) {
-          related = data;
-          console.log('Data is array');
-        } else {
-          console.log('Unknown data format, checking all keys:', Object.keys(data || {}));
-        }
-        
-        console.log('=== Parsed Related Terms ===');
-        console.log('Number of terms:', related.length);
-        if (related.length > 0) {
-          console.log('First item:', JSON.stringify(related[0], null, 2));
-          console.log('First item keys:', Object.keys(related[0]));
-          console.log('First item count field:', related[0].count);
-          console.log('First item co_occurrence field:', related[0].co_occurrence);
-          console.log('First item frequency field:', related[0].frequency);
-          console.log('First item all numeric fields:', 
-            Object.entries(related[0])
-              .filter(([k, v]) => typeof v === 'number')
-              .map(([k, v]) => `${k}: ${v}`)
-          );
-        }
-        
-        setRelatedTerms(related);
+        const items = Array.isArray(data) ? data : (data.related || []);
+        setRelatedTerms(items);
       } catch (e) {
         if (!alive) return;
-        console.error('=== Fetch Error ===', e);
         setError(`Failed to fetch related terms: ${e?.message || e}`);
+        setRelatedTerms([]);
       } finally {
         if (alive) setLoading(false);
       }
@@ -100,37 +70,12 @@ export function RelatedTerms({ query, onSelectTerm }) {
     if (!relatedTerms.length) return [];
     const sorted = [...relatedTerms];
     if (sortBy === 'count') {
-      sorted.sort((a, b) => {
-        const countA = Number(a.co_count) || Number(a.count) || Number(a.co_occurrence) || Number(a.frequency) || 0;
-        const countB = Number(b.co_count) || Number(b.count) || Number(b.co_occurrence) || Number(b.frequency) || 0;
-        console.log(`Sorting by count: ${a.term}=${countA}, ${b.term}=${countB}`);
-        return countB - countA;
-      });
-    } else {
-      sorted.sort((a, b) => {
-        const jA = Number(a.jaccard) || Number(a.jaccard_score) || Number(a.similarity) || 0;
-        const jB = Number(b.jaccard) || Number(b.jaccard_score) || Number(b.similarity) || 0;
-        return jB - jA;
-      });
+      sorted.sort((a, b) => (b.co_count || 0) - (a.co_count || 0));
+    } else if (sortBy === 'jaccard') {
+      sorted.sort((a, b) => (b.jaccard || 0) - (a.jaccard || 0));
     }
     return sorted;
   }, [relatedTerms, sortBy]);
-
-  const getCount = (item) => {
-    console.log('Getting count for:', item.term, 'Raw item:', item);
-    const count = item.co_count ?? item.count ?? item.co_occurrence ?? item.frequency ?? item.n ?? item.num;
-    console.log('  count field:', item.count);
-    console.log('  co_occurrence field:', item.co_occurrence);
-    console.log('  frequency field:', item.frequency);
-    console.log('  Final count value:', count);
-    return count !== undefined && count !== null ? count : 'N/A';
-  };
-
-  const getJaccard = (item) => {
-    const jaccard = item.jaccard ?? item.jaccard_score ?? item.similarity ?? item.j;
-    if (jaccard === undefined || jaccard === null) return 'N/A';
-    return typeof jaccard === 'number' ? jaccard.toFixed(3) : jaccard;
-  };
 
   return (
     <div style={{
@@ -138,181 +83,198 @@ export function RelatedTerms({ query, onSelectTerm }) {
       padding: 0,
       overflow: 'hidden'
     }}>
+      {/* Header */}
       <div style={{
-        padding: ds.spacing.xl,
+        padding: `${ds.spacing.md} ${ds.spacing.lg}`,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
-        background: ds.colors.primary[50]
+        background: ds.colors.primary[50],
+        flexShrink: 0
       }}>
+        <h2 style={{
+          fontSize: ds.fontSize.lg,
+          fontWeight: ds.fontWeight.bold,
+          color: ds.colors.text.primary,
+          margin: 0,
+          lineHeight: ds.lineHeight.tight
+        }}>
+          Related Terms
+        </h2>
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
-          gap: ds.spacing.lg
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: ds.spacing.xs
         }}>
-          {/* Title and Sort by - same row */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: ds.spacing.lg
+          <p style={{
+            fontSize: ds.fontSize.xs,
+            color: ds.colors.text.tertiary,
+            margin: 0,
+            fontWeight: ds.fontWeight.medium
           }}>
-            <div style={{ flex: 1 }}>
-              <h2 style={{
-                fontSize: ds.fontSize.lg,
-                fontWeight: ds.fontWeight.bold,
-                color: ds.colors.text.primary,
-                margin: 0,
-                lineHeight: ds.lineHeight.tight
-              }}>
-                Related Terms
-              </h2>
-              <p style={{
+            {relatedTerms.length} related terms found
+          </p>
+          
+          {/* Sort Options */}
+          {selectedTargetTerm && !loading && sortedTerms.length > 0 && (
+            <div style={{
+              display: 'flex',
+              gap: ds.spacing.xs,
+              alignItems: 'center'
+            }}>
+              <span style={{
                 fontSize: ds.fontSize.xs,
                 color: ds.colors.text.tertiary,
-                margin: `${ds.spacing.xs} 0 0 0`,
-                fontWeight: ds.fontWeight.medium
+                fontWeight: ds.fontWeight.semibold,
+                marginRight: ds.spacing.xs
               }}>
-                {queryTerms.length > 0 ? `Explore related terms` : 'Enter a query to see related terms'}
-              </p>
-            </div>
-
-            {/* Sort by on the right */}
-            {queryTerms.length > 0 && (
-              <div style={{
-                display: 'flex',
-                gap: ds.spacing.xs,
-                background: ds.colors.gray[100],
-                padding: ds.spacing.xs,
-                borderRadius: ds.borderRadius.lg,
-                flexShrink: 0
-              }}>
+                Sort by:
+              </span>
+              {['count', 'jaccard'].map(option => (
                 <button
-                  onClick={() => setSortBy('count')}
+                  key={option}
+                  onClick={() => setSortBy(option)}
                   style={{
-                    padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
-                    background: sortBy === 'count' 
-                      ? ds.colors.background.primary
-                      : 'transparent',
-                    color: sortBy === 'count' 
-                      ? ds.colors.primary[600]
+                    padding: `${ds.spacing.xs} ${ds.spacing.md}`,
+                    background: sortBy === option 
+                      ? (option === 'count' ? '#ffedd5' : ds.colors.primary[100])
+                      : ds.colors.background.primary,
+                    color: sortBy === option 
+                      ? (option === 'count' ? '#c2410c' : ds.colors.primary[700])
                       : ds.colors.text.secondary,
-                    border: 'none',
+                    border: `1.5px solid ${sortBy === option 
+                      ? (option === 'count' ? '#fb923c' : ds.colors.primary[400])
+                      : ds.colors.gray[300]}`,
                     borderRadius: ds.borderRadius.md,
-                    fontSize: ds.fontSize.sm,
+                    fontSize: ds.fontSize.xs,
                     fontWeight: ds.fontWeight.semibold,
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: sortBy === 'count' ? ds.shadows.sm : 'none'
+                    transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+                    letterSpacing: '0.3px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (sortBy !== option) {
+                      e.currentTarget.style.background = ds.colors.gray[50];
+                      e.currentTarget.style.borderColor = ds.colors.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (sortBy !== option) {
+                      e.currentTarget.style.background = ds.colors.background.primary;
+                      e.currentTarget.style.borderColor = ds.colors.gray[300];
+                    }
                   }}
                 >
-                  Co-Count
+                  {option === 'count' ? 'Co-count' : 'Jaccard Index'}
                 </button>
-                <button
-                  onClick={() => setSortBy('jaccard')}
-                  style={{
-                    padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
-                    background: sortBy === 'jaccard' 
-                      ? ds.colors.background.primary
-                      : 'transparent',
-                    color: sortBy === 'jaccard' 
-                      ? ds.colors.primary[600]
-                      : ds.colors.text.secondary,
-                    border: 'none',
-                    borderRadius: ds.borderRadius.md,
-                    fontSize: ds.fontSize.sm,
-                    fontWeight: ds.fontWeight.semibold,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: sortBy === 'jaccard' ? ds.shadows.sm : 'none'
-                  }}
-                >
-                  J Score
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Target selector */}
-          {queryTerms.length > 0 && (
-            <div>
-              <div style={{
-                fontSize: ds.fontSize.xs,
-                fontWeight: ds.fontWeight.bold,
-                color: ds.colors.text.secondary,
-                marginBottom: ds.spacing.xs,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
-                Target Term
-              </div>
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: ds.spacing.xs
-              }}>
-                {queryTerms.map(term => (
-                  <button
-                    key={term}
-                    onClick={() => setSelectedTargetTerm(term)}
-                    style={{
-                      padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
-                      background: selectedTargetTerm === term 
-                        ? `linear-gradient(135deg, ${ds.colors.primary[500]}, ${ds.colors.primary[600]})`
-                        : ds.colors.background.primary,
-                      color: selectedTargetTerm === term 
-                        ? ds.colors.text.inverse 
-                        : ds.colors.text.primary,
-                      border: selectedTargetTerm === term
-                        ? 'none'
-                        : `2px solid ${ds.colors.gray[300]}`,
-                      borderRadius: ds.borderRadius.lg,
-                      fontSize: ds.fontSize.sm,
-                      fontWeight: ds.fontWeight.semibold,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      boxShadow: selectedTargetTerm === term 
-                        ? `0 4px 12px ${ds.colors.primary[200]}` 
-                        : ds.shadows.sm,
-                      transform: selectedTargetTerm === term ? 'translateY(-1px)' : 'none'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedTargetTerm !== term) {
-                        e.currentTarget.style.borderColor = ds.colors.primary[400];
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = ds.shadows.md;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedTargetTerm !== term) {
-                        e.currentTarget.style.borderColor = ds.colors.gray[300];
-                        e.currentTarget.style.transform = 'none';
-                        e.currentTarget.style.boxShadow = ds.shadows.sm;
-                      }
-                    }}
-                  >
-                    {term}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      <div style={{
-        padding: ds.spacing.xl,
-        paddingBottom: ds.spacing['2xl']
-      }}>
-        {queryTerms.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            padding: ds.spacing['2xl'],
-            color: ds.colors.text.tertiary,
-            fontSize: ds.fontSize.sm
-          }}>
-            Enter a query in the Query Builder to see related terms
+      {/* Content */}
+      <div style={{ padding: `${ds.spacing.lg} ${ds.spacing.lg}` }}>
+        {/* Term Selector Pills */}
+        {queryTerms.length > 0 && (
+          <div style={{ marginBottom: ds.spacing.lg }}>
+            <div style={{
+              display: 'flex',
+              gap: ds.spacing.xs,
+              flexWrap: 'wrap',
+              alignItems: 'center'
+            }}>
+              <span style={{
+                fontSize: ds.fontSize.xs,
+                color: ds.colors.text.tertiary,
+                fontWeight: ds.fontWeight.semibold,
+                marginRight: ds.spacing.xs
+              }}>
+                Show related terms for:
+              </span>
+              {queryTerms.map((term, idx) => (
+                <button
+                  key={`${term}-${idx}`}
+                  onClick={() => setSelectedTargetTerm(term)}
+                  style={{
+                    padding: `${ds.spacing.xs} ${ds.spacing.md}`,
+                    background: selectedTargetTerm === term
+                      ? `linear-gradient(135deg, ${ds.colors.primary[500]}, ${ds.colors.primary[600]})`
+                      : ds.colors.background.primary,
+                    color: selectedTargetTerm === term 
+                      ? ds.colors.text.inverse 
+                      : ds.colors.text.secondary,
+                    border: selectedTargetTerm === term
+                      ? 'none'
+                      : `1.5px solid ${ds.colors.gray[300]}`,
+                    borderRadius: ds.borderRadius.md,
+                    fontSize: ds.fontSize.xs,
+                    fontWeight: ds.fontWeight.semibold,
+                    cursor: 'pointer',
+                    transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: selectedTargetTerm === term 
+                      ? `0 2px 8px ${ds.colors.primary[200]}` 
+                      : '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+                    transform: selectedTargetTerm === term ? 'translateY(-1px)' : 'none',
+                    letterSpacing: '0.3px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedTargetTerm !== term) {
+                      e.currentTarget.style.background = ds.colors.primary[50];
+                      e.currentTarget.style.borderColor = ds.colors.primary[400];
+                      e.currentTarget.style.color = ds.colors.primary[700];
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 2px 4px 0 rgba(0, 0, 0, 0.08)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedTargetTerm !== term) {
+                      e.currentTarget.style.background = ds.colors.background.primary;
+                      e.currentTarget.style.borderColor = ds.colors.gray[300];
+                      e.currentTarget.style.color = ds.colors.text.secondary;
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.04)';
+                    }
+                  }}
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
+        {/* Empty State */}
+        {queryTerms.length === 0 && (
+          <div style={{
+            textAlign: 'center',
+            padding: ds.spacing['3xl']
+          }}>
+            <svg
+              style={{
+                width: '48px',
+                height: '48px',
+                margin: '0 auto',
+                color: ds.colors.gray[300],
+                marginBottom: ds.spacing.lg
+              }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <p style={{
+              color: ds.colors.text.disabled,
+              fontSize: ds.fontSize.sm,
+              fontWeight: ds.fontWeight.medium
+            }}>
+              Enter a query in the Query Builder to see related terms
+            </p>
+          </div>
+        )}
+
+        {/* Loading State */}
         {loading && (
           <div style={{
             display: 'flex',
@@ -339,115 +301,196 @@ export function RelatedTerms({ query, onSelectTerm }) {
           </div>
         )}
 
+        {/* Error State */}
         {error && (
           <div style={{
             padding: ds.spacing.lg,
-            borderRadius: ds.borderRadius.md,
-            border: `1px solid ${ds.colors.error}40`,
+            borderRadius: ds.borderRadius.lg,
+            border: `2px solid ${ds.colors.error}40`,
             background: `${ds.colors.error}10`,
             color: ds.colors.error,
             fontSize: ds.fontSize.sm
           }}>
-            <strong style={{ fontWeight: ds.fontWeight.semibold }}>Error:</strong> {error}
+            <div style={{ display: 'flex', alignItems: 'center', gap: ds.spacing.md }}>
+              <svg style={{ width: '20px', height: '20px', flexShrink: 0 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <strong style={{ fontWeight: ds.fontWeight.semibold, display: 'block', marginBottom: ds.spacing.xs }}>Error Loading Terms</strong>
+                {error}
+              </div>
+            </div>
           </div>
         )}
 
+        {/* No Results State */}
         {selectedTargetTerm && !loading && !error && sortedTerms.length === 0 && (
           <div style={{
             textAlign: 'center',
-            padding: ds.spacing['2xl'],
-            color: ds.colors.text.tertiary,
-            fontSize: ds.fontSize.sm,
-            height: "1000px"
+            padding: ds.spacing['2xl']
           }}>
-            No related terms found for "{selectedTargetTerm}"
+            <svg
+              style={{
+                width: '48px',
+                height: '48px',
+                margin: '0 auto',
+                color: ds.colors.gray[300],
+                marginBottom: ds.spacing.lg
+              }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p style={{
+              color: ds.colors.text.disabled,
+              fontSize: ds.fontSize.sm,
+              fontWeight: ds.fontWeight.medium
+            }}>
+              No related terms found for "{selectedTargetTerm}"
+            </p>
           </div>
         )}
 
+        {/* Related Terms List */}
         {selectedTargetTerm && !loading && !error && sortedTerms.length > 0 && (
           <div style={{
-            overflowX: 'auto',
-            overflowY: 'hidden',
             display: 'flex',
-            gap: ds.spacing.md,
-            padding: `${ds.spacing.sm} 0 ${ds.spacing.md} 0`,
-            scrollbarWidth: 'thin',
-            scrollbarColor: `${ds.colors.gray[300]} ${ds.colors.gray[100]}`,
-            marginBottom: ds.spacing.sm
+            flexDirection: 'column',
+            gap: ds.spacing.xs,
+            maxHeight: '130px',
+            overflowY: 'auto',
+            paddingRight: ds.spacing.xs
           }}>
             {sortedTerms.map((item, idx) => (
               <button
                 key={`${item.term}-${idx}`}
                 onClick={() => onSelectTerm?.(item.term)}
                 style={{
-                  flexShrink: 0,
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: ds.spacing.xs,
-                  padding: `${ds.spacing.md} ${ds.spacing.lg}`,
-                  background: ds.colors.primary[50],
-                  border: `1.5px solid ${ds.colors.primary[200]}`,
-                  borderRadius: ds.borderRadius.full,
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: ds.borderRadius.md,
                   cursor: 'pointer',
-                  transition: ds.transitions.fast,
-                  boxShadow: ds.shadows.sm,
-                  minWidth: '140px'
+                  transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  textAlign: 'left',
+                  gap: ds.spacing.md
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = ds.colors.primary[100];
-                  e.currentTarget.style.borderColor = ds.colors.primary[400];
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = ds.shadows.lg;
+                  e.currentTarget.style.background = ds.colors.primary[50];
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                  // Enhance badges on hover
+                  const badges = e.currentTarget.querySelectorAll('[data-badge]');
+                  badges[0].style.transform = 'scale(1.05)';
+                  badges[1].style.transform = 'scale(1.05)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = ds.colors.primary[50];
-                  e.currentTarget.style.borderColor = ds.colors.primary[200];
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = ds.shadows.sm;
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                  // Reset badges
+                  const badges = e.currentTarget.querySelectorAll('[data-badge]');
+                  badges[0].style.transform = 'scale(1)';
+                  badges[1].style.transform = 'scale(1)';
                 }}
               >
-                <div style={{
+                <span style={{
                   fontSize: ds.fontSize.sm,
-                  fontWeight: ds.fontWeight.semibold,
-                  color: ds.colors.primary[700],
-                  wordBreak: 'break-word',
-                  textAlign: 'left'
+                  fontWeight: ds.fontWeight.medium,
+                  color: ds.colors.text.secondary,
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  minWidth: 0
                 }}>
                   {item.term}
-                </div>
+                </span>
                 <div style={{
                   display: 'flex',
-                  gap: ds.spacing.md,
-                  fontSize: ds.fontSize.xs,
-                  color: ds.colors.text.tertiary
+                  gap: ds.spacing.xs,
+                  alignItems: 'center',
+                  flexShrink: 0
                 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: ds.spacing.xs
-                  }}>
-                    <span style={{ fontWeight: ds.fontWeight.medium }}>Count:</span>
-                    <span style={{ 
-                      fontWeight: ds.fontWeight.bold,
-                      color: ds.colors.primary[600]
-                    }}>
-                      {getCount(item)}
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: ds.spacing.xs
-                  }}>
-                    <span style={{ fontWeight: ds.fontWeight.medium }}>J:</span>
-                    <span style={{ 
-                      fontWeight: ds.fontWeight.bold,
-                      color: ds.colors.primary[600]
-                    }}>
-                      {getJaccard(item)}
-                    </span>
-                  </div>
+                  {/* Show Co-count first when sorting by count, Jaccard first when sorting by jaccard */}
+                  {sortBy === 'count' ? (
+                    <>
+                      <span
+                        data-badge
+                        style={{
+                          fontSize: ds.fontSize.xs,
+                          fontWeight: ds.fontWeight.semibold,
+                          color: '#c2410c',
+                          background: '#ffedd5',
+                          padding: `${ds.spacing.xs} ${ds.spacing.sm}`,
+                          borderRadius: ds.borderRadius.md,
+                          minWidth: '44px',
+                          textAlign: 'center',
+                          transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                          border: '1px solid #fed7aa'
+                        }}
+                      >
+                        {item.co_count || 0}
+                      </span>
+                      <span
+                        data-badge
+                        style={{
+                          fontSize: ds.fontSize.xs,
+                          fontWeight: ds.fontWeight.semibold,
+                          color: ds.colors.primary[700],
+                          background: ds.colors.primary[50],
+                          padding: `${ds.spacing.xs} ${ds.spacing.sm}`,
+                          borderRadius: ds.borderRadius.md,
+                          minWidth: '52px',
+                          textAlign: 'center',
+                          transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                          border: `1px solid ${ds.colors.primary[100]}`
+                        }}
+                      >
+                        {item.jaccard ? item.jaccard.toFixed(3) : '0.000'}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        data-badge
+                        style={{
+                          fontSize: ds.fontSize.xs,
+                          fontWeight: ds.fontWeight.semibold,
+                          color: ds.colors.primary[700],
+                          background: ds.colors.primary[50],
+                          padding: `${ds.spacing.xs} ${ds.spacing.sm}`,
+                          borderRadius: ds.borderRadius.md,
+                          minWidth: '52px',
+                          textAlign: 'center',
+                          transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                          border: `1px solid ${ds.colors.primary[100]}`
+                        }}
+                      >
+                        {item.jaccard ? item.jaccard.toFixed(3) : '0.000'}
+                      </span>
+                      <span
+                        data-badge
+                        style={{
+                          fontSize: ds.fontSize.xs,
+                          fontWeight: ds.fontWeight.semibold,
+                          color: '#c2410c',
+                          background: '#ffedd5',
+                          padding: `${ds.spacing.xs} ${ds.spacing.sm}`,
+                          borderRadius: ds.borderRadius.md,
+                          minWidth: '44px',
+                          textAlign: 'center',
+                          transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                          border: '1px solid #fed7aa'
+                        }}
+                      >
+                        {item.co_count || 0}
+                      </span>
+                    </>
+                  )}
                 </div>
               </button>
             ))}
@@ -458,25 +501,6 @@ export function RelatedTerms({ query, onSelectTerm }) {
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
-        }
-        
-        div::-webkit-scrollbar {
-          height: 8px;
-        }
-        
-        div::-webkit-scrollbar-track {
-          background: ${ds.colors.gray[100]};
-          border-radius: ${ds.borderRadius.md};
-          margin: 0 ${ds.spacing.md};
-        }
-        
-        div::-webkit-scrollbar-thumb {
-          background: ${ds.colors.gray[300]};
-          border-radius: ${ds.borderRadius.md};
-        }
-        
-        div::-webkit-scrollbar-thumb:hover {
-          background: ${ds.colors.gray[400]};
         }
       `}</style>
     </div>

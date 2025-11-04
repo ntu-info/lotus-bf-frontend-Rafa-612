@@ -1,4 +1,4 @@
-// src/components/QueryResultsModern.jsx - Updated version/
+// src/components/QueryResultsModern.jsx - Enhanced version with consistent header
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';
@@ -7,7 +7,6 @@ import ds from '../styles/designSystem';
 function highlightTerms(title, query) {
   if (!title || !query) return title;
   
-  // Extract individual terms from query (remove operators and parentheses)
   const terms = query
     .replace(/\(|\)/g, ' ')
     .split(/\s+/)
@@ -16,7 +15,6 @@ function highlightTerms(title, query) {
   
   if (terms.length === 0) return title;
   
-  // Create regex pattern for all terms
   const pattern = new RegExp(`(${terms.join('|')})`, 'gi');
   const parts = title.split(pattern);
   
@@ -46,6 +44,7 @@ export function QueryResults({ query, onSaveStudy }) {
   const [studies, setStudies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sortBy, setSortBy] = useState('desc'); // 'desc' = newest first, 'asc' = oldest first
 
   useEffect(() => {
     if (!query) {
@@ -81,43 +80,106 @@ export function QueryResults({ query, onSaveStudy }) {
     return () => { alive = false; ac.abort(); };
   }, [query]);
 
+  // Sort studies by year
+  const sortedStudies = [...studies].sort((a, b) => {
+    const yearA = parseInt(a.year) || 0;
+    const yearB = parseInt(b.year) || 0;
+    return sortBy === 'desc' ? yearB - yearA : yearA - yearB;
+  });
+
   return (
     <div style={{
       ...ds.createStyles.card(),
       padding: 0,
       overflow: 'hidden'
     }}>
-      {/* Header - 移除 Query 顯示 */}
+      {/* Header - consistent with other components */}
       <div style={{
-        padding: ds.spacing.xl,
+        padding: `${ds.spacing.md} ${ds.spacing.lg}`,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
         background: ds.colors.primary[50]
       }}>
-        <div>
-          <h2 style={{
-            fontSize: ds.fontSize.lg,
-            fontWeight: ds.fontWeight.bold,
-            color: ds.colors.text.primary,
-            margin: 0,
-            lineHeight: ds.lineHeight.tight
-          }}>
-            Query Results
-          </h2>
+        <h2 style={{
+          fontSize: ds.fontSize.lg,
+          fontWeight: ds.fontWeight.bold,
+          color: ds.colors.text.primary,
+          margin: 0,
+          lineHeight: ds.lineHeight.tight
+        }}>
+          Query Results
+        </h2>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: ds.spacing.xs
+        }}>
           <p style={{
             fontSize: ds.fontSize.xs,
             color: ds.colors.text.tertiary,
-            margin: `${ds.spacing.xs} 0 0 0`,
+            margin: 0,
             fontWeight: ds.fontWeight.medium
           }}>
             {studies.length} {studies.length === 1 ? 'study' : 'studies'} found
           </p>
+          
+          {/* Sort Options */}
+          {studies.length > 0 && (
+            <div style={{
+              display: 'flex',
+              gap: ds.spacing.xs,
+              alignItems: 'center'
+            }}>
+              <span style={{
+                fontSize: ds.fontSize.xs,
+                color: ds.colors.text.tertiary,
+                fontWeight: ds.fontWeight.semibold,
+                marginRight: ds.spacing.xs
+              }}>
+                Sort by Year:
+              </span>
+              {['desc', 'asc'].map(option => (
+                <button
+                  key={option}
+                  onClick={() => setSortBy(option)}
+                  style={{
+                    padding: `${ds.spacing.xs} ${ds.spacing.md}`,
+                    background: sortBy === option ? ds.colors.primary[100] : ds.colors.background.primary,
+                    color: sortBy === option ? ds.colors.primary[700] : ds.colors.text.secondary,
+                    border: `1.5px solid ${sortBy === option ? ds.colors.primary[400] : ds.colors.gray[300]}`,
+                    borderRadius: ds.borderRadius.md,
+                    fontSize: ds.fontSize.xs,
+                    fontWeight: ds.fontWeight.semibold,
+                    cursor: 'pointer',
+                    transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+                    letterSpacing: '0.3px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (sortBy !== option) {
+                      e.currentTarget.style.background = ds.colors.gray[50];
+                      e.currentTarget.style.borderColor = ds.colors.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (sortBy !== option) {
+                      e.currentTarget.style.background = ds.colors.background.primary;
+                      e.currentTarget.style.borderColor = ds.colors.gray[300];
+                    }
+                  }}
+                >
+                  {option === 'desc' ? 'Newest' : 'Oldest'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div style={{
         overflowY: 'auto',
-        maxHeight: '850px'
+        maxHeight: '600px'
       }}>
         {!query ? (
           <div style={{
@@ -232,117 +294,158 @@ export function QueryResults({ query, onSaveStudy }) {
           </div>
         ) : (
           <div>
-            {studies.map((study, idx) => (
+            {sortedStudies.map((study, idx) => (
               <div 
                 key={idx} 
                 style={{
                   padding: ds.spacing.lg,
-                  borderBottom: idx < studies.length - 1 ? `1px solid ${ds.colors.gray[200]}` : 'none',
-                  transition: ds.transitions.fast
+                  borderBottom: idx < sortedStudies.length - 1 ? `1px solid ${ds.colors.gray[100]}` : 'none',
+                  transition: ds.transitions.fast,
+                  background: ds.colors.background.primary
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = ds.colors.gray[50]}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = ds.colors.gray[50];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = ds.colors.background.primary;
+                }}
               >
-                <div style={{
-                  display: 'flex',
-                  gap: ds.spacing.md,
-                  alignItems: 'flex-start'
-                }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: ds.spacing.md }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Title with highlighted terms */}
+                    {/* Title */}
                     <h3 style={{
                       fontSize: ds.fontSize.sm,
                       fontWeight: ds.fontWeight.semibold,
                       color: ds.colors.text.primary,
-                      marginBottom: ds.spacing.xs,
-                      lineHeight: ds.lineHeight.snug
+                      margin: `0 0 ${ds.spacing.sm} 0`,
+                      lineHeight: ds.lineHeight.normal
                     }}>
-                      {highlightTerms(study.title || 'Untitled study', query)}
+                      {highlightTerms(study.title, query)}
                     </h3>
-                    <p style={{
-                      fontSize: ds.fontSize.xs,
-                      color: ds.colors.text.secondary,
-                      marginBottom: ds.spacing.xs,
-                      lineHeight: ds.lineHeight.relaxed
-                    }}>
-                      {study.authors || 'Unknown authors'}
-                    </p>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: ds.spacing.sm,
-                      fontSize: ds.fontSize.xs,
-                      color: ds.colors.text.tertiary,
-                      flexWrap: 'wrap'
-                    }}>
-                      <span style={{ fontWeight: ds.fontWeight.medium, color: ds.colors.text.secondary }}>
-                        {study.journal || 'Unknown journal'}
-                      </span>
-                      <span style={{ color: ds.colors.gray[300] }}>•</span>
-                      <span>{study.year || 'N/A'}</span>
-                      {(study.pmid || study.PMID || study.pubmed_id || study.id) && (
-                        <>
-                          <span style={{ color: ds.colors.gray[300] }}>•</span>
-                          <a
-                            href={`https://pubmed.ncbi.nlm.nih.gov/${study.pmid || study.PMID || study.pubmed_id || study.id}/`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: ds.spacing.xs,
-                              color: ds.colors.primary[600],
-                              textDecoration: 'none',
-                              fontWeight: ds.fontWeight.semibold,
-                              transition: ds.transitions.fast,
-                              padding: '2px 8px',
-                              borderRadius: ds.borderRadius.sm,
-                              background: ds.colors.primary[50]
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = ds.colors.primary[100];
-                              e.currentTarget.style.color = ds.colors.primary[700];
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = ds.colors.primary[50];
-                              e.currentTarget.style.color = ds.colors.primary[600];
-                            }}
-                          >
-                            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            PubMed
-                          </a>
-                        </>
-                      )}
-                    </div>
+
+                    {/* Authors first - prevent breaking names */}
+                    {study.authors && (
+                      <p style={{
+                        fontSize: ds.fontSize.xs,
+                        color: ds.colors.text.secondary,
+                        margin: `0 0 ${ds.spacing.sm} 0`,
+                        lineHeight: ds.lineHeight.relaxed,
+                        wordBreak: 'keep-all',
+                        overflowWrap: 'break-word'
+                      }}>
+                        <strong style={{ fontWeight: ds.fontWeight.semibold }}>Authors:</strong> {study.authors}
+                      </p>
+                    )}
+
+                    {/* Metadata: Journal • Year • PubMed */}
+                    {(study.journal || study.year || study.pmid || study.PMID || study.pubmed_id || study.id) && (
+                      <div style={{
+                        display: 'flex',
+                        gap: ds.spacing.sm,
+                        alignItems: 'center',
+                        marginBottom: ds.spacing.sm,
+                        flexWrap: 'wrap',
+                        fontSize: ds.fontSize.xs,
+                        color: ds.colors.text.secondary,
+                        fontWeight: ds.fontWeight.medium
+                      }}>
+                        {study.journal && (
+                          <span>
+                            <strong style={{ fontWeight: ds.fontWeight.semibold }}>Journal:</strong> {study.journal}
+                          </span>
+                        )}
+                        {study.journal && study.year && <span style={{ color: ds.colors.gray[300] }}>•</span>}
+                        {study.year && (
+                          <span>
+                            <strong style={{ fontWeight: ds.fontWeight.semibold }}>Year:</strong> {study.year}
+                          </span>
+                        )}
+                        {(study.pmid || study.PMID || study.pubmed_id || study.id) && (
+                          <>
+                            <span style={{ color: ds.colors.gray[300] }}>•</span>
+                            <a
+                              href={`https://pubmed.ncbi.nlm.nih.gov/${study.pmid || study.PMID || study.pubmed_id || study.id}/`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: ds.spacing.xs,
+                                color: ds.colors.primary[600],
+                                textDecoration: 'none',
+                                fontWeight: ds.fontWeight.semibold,
+                                transition: ds.transitions.fast,
+                                padding: '2px 8px',
+                                borderRadius: ds.borderRadius.sm,
+                                background: ds.colors.primary[50]
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = ds.colors.primary[100];
+                                e.currentTarget.style.color = ds.colors.primary[700];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = ds.colors.primary[50];
+                                e.currentTarget.style.color = ds.colors.primary[600];
+                              }}
+                            >
+                              <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              PubMed
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Abstract */}
+                    {study.abstract && (
+                      <p style={{
+                        fontSize: ds.fontSize.xs,
+                        color: ds.colors.text.tertiary,
+                        margin: 0,
+                        lineHeight: ds.lineHeight.relaxed,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {study.abstract}
+                      </p>
+                    )}
                   </div>
-                  <button
-                    onClick={() => onSaveStudy(study)}
-                    style={{
-                      flexShrink: 0,
-                      padding: ds.spacing.sm,
-                      borderRadius: ds.borderRadius.md,
-                      border: 'none',
-                      background: 'transparent',
-                      color: ds.colors.gray[400],
-                      cursor: 'pointer',
-                      transition: ds.transitions.fast
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = ds.colors.primary[50];
-                      e.currentTarget.style.color = ds.colors.primary[600];
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = ds.colors.gray[400];
-                    }}
-                    title="Save study"
-                  >
-                    <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </button>
+
+                  {/* Right column - Save button only */}
+                  <div style={{
+                    flexShrink: 0
+                  }}>
+                    {/* Save Button - Icon only */}
+                    <button
+                      onClick={() => onSaveStudy(study)}
+                      style={{
+                        padding: ds.spacing.sm,
+                        borderRadius: ds.borderRadius.md,
+                        border: 'none',
+                        background: 'transparent',
+                        color: ds.colors.gray[400],
+                        cursor: 'pointer',
+                        transition: ds.transitions.fast
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = ds.colors.primary[50];
+                        e.currentTarget.style.color = ds.colors.primary[600];
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = ds.colors.gray[400];
+                      }}
+                      title="Save study"
+                    >
+                      <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
