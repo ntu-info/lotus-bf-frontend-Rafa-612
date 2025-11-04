@@ -160,11 +160,15 @@ export const components = {
     fontSize: '0.875rem',
     color: '#111827',
     background: '#ffffff',
-    transition: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
     focus: {
       outline: 'none',
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 3px #dbeafe',
+      borderColor: 'transparent',
+      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.5)',
+      transform: 'translateY(-0.5px)',
+    },
+    hover: {
+      borderColor: '#9ca3af',
     },
   },
   

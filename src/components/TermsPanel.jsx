@@ -1,4 +1,4 @@
-// src/components/TermsPanel.jsx - With infinite scroll
+// src/components/TermsPanel.jsx - 方案4: 內縮陰影（按下感）
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { API_BASE } from '../api';
 import ds from '../styles/designSystem';
@@ -8,7 +8,7 @@ export function TermsPanel({ onPickTerm }) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-  const [displayCount, setDisplayCount] = useState(100); // 初始顯示 100 個
+  const [displayCount, setDisplayCount] = useState(100);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -42,18 +42,14 @@ export function TermsPanel({ onPickTerm }) {
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   }, [terms, search]);
 
-  // 監聽滾動事件，接近底部時載入更多/
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    
-    // 當滾動到距離底部 100px 時，載入更多
     if (scrollHeight - scrollTop - clientHeight < 100) {
       setDisplayCount(prev => Math.min(prev + 50, filtered.length));
     }
   }, [filtered.length]);
 
-  // 當搜尋改變時，重置顯示數量
   useEffect(() => {
     setDisplayCount(100);
   }, [search]);
@@ -68,7 +64,6 @@ export function TermsPanel({ onPickTerm }) {
       padding: 0,
       overflow: 'hidden'
     }}>
-      {/* Header */}
       <div style={{
         padding: ds.spacing.xl,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
@@ -94,7 +89,6 @@ export function TermsPanel({ onPickTerm }) {
         </p>
       </div>
 
-      {/* Search Bar */}
       <div style={{
         padding: ds.spacing.xl,
         borderBottom: `1px solid ${ds.colors.gray[100]}`,
@@ -131,12 +125,26 @@ export function TermsPanel({ onPickTerm }) {
                 fontSize: ds.fontSize.sm
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = ds.colors.primary[500];
-                e.target.style.boxShadow = `0 0 0 3px ${ds.colors.primary[100]}`;
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.background = '#f9fafb';
+                e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.06)';
+                e.target.style.transform = 'none';
+              }}
+              onMouseEnter={(e) => {
+                if (document.activeElement !== e.target) {
+                  e.target.style.borderColor = ds.colors.gray[400];
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (document.activeElement !== e.target) {
+                  e.target.style.borderColor = ds.colors.gray[300];
+                }
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = ds.colors.gray[300];
+                e.target.style.background = '#ffffff';
                 e.target.style.boxShadow = 'none';
+                e.target.style.transform = 'translateY(0)';
               }}
             />
           </div>
@@ -157,16 +165,18 @@ export function TermsPanel({ onPickTerm }) {
               flexShrink: 0
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = ds.colors.gray[200];
-              e.currentTarget.style.borderColor = ds.colors.gray[400];
-              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.background = '#fee2e2';
+              e.currentTarget.style.borderColor = ds.colors.error;
+              e.currentTarget.style.color = ds.colors.error;
               e.currentTarget.style.boxShadow = ds.shadows.md;
+              e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = ds.colors.gray[100];
               e.currentTarget.style.borderColor = ds.colors.gray[300];
-              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.color = ds.colors.text.secondary;
               e.currentTarget.style.boxShadow = ds.shadows.sm;
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
             Clear
@@ -174,7 +184,6 @@ export function TermsPanel({ onPickTerm }) {
         </div>
       </div>
 
-      {/* Loading State */}
       {loading && (
         <div style={{
           padding: ds.spacing['2xl'],
@@ -204,7 +213,6 @@ export function TermsPanel({ onPickTerm }) {
         </div>
       )}
 
-      {/* Error State */}
       {err && (
         <div style={{
           margin: ds.spacing.xl,
@@ -220,7 +228,6 @@ export function TermsPanel({ onPickTerm }) {
         </div>
       )}
 
-      {/* Terms List - 無限滾動 */}
       {!loading && !err && (
         <div 
           ref={scrollRef}
@@ -275,7 +282,6 @@ export function TermsPanel({ onPickTerm }) {
                   {t}
                 </button>
               ))}
-              {/* 載入更多提示 */}
               {displayCount < filtered.length && (
                 <div style={{
                   textAlign: 'center',
@@ -291,7 +297,6 @@ export function TermsPanel({ onPickTerm }) {
         </div>
       )}
 
-      {/* Footer */}
       {!loading && !err && (
         <div style={{
           padding: `${ds.spacing.md} ${ds.spacing.xl}`,

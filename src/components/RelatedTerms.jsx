@@ -204,7 +204,7 @@ export function RelatedTerms({ query, onSelectTerm }) {
                     boxShadow: sortBy === 'count' ? ds.shadows.sm : 'none'
                   }}
                 >
-                  Count
+                  Co-Count
                 </button>
                 <button
                   onClick={() => setSortBy('jaccard')}

@@ -64,11 +64,25 @@ export function QueryBuilder({ query, setQuery }) {
             }}
             onFocus={(e) => {
               e.target.style.borderColor = ds.colors.primary[500];
-              e.target.style.boxShadow = `0 0 0 3px ${ds.colors.primary[100]}`;
+              e.target.style.boxShadow = '0 0 0 1px rgba(59, 130, 246, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06)';
+              e.target.style.transform = 'translateY(-0.5px)';
+            }}
+            onMouseEnter={(e) => {
+              if (document.activeElement !== e.target) {
+                e.target.style.borderColor = ds.colors.gray[400];
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.04)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (document.activeElement !== e.target) {
+                e.target.style.borderColor = ds.colors.gray[300];
+                e.target.style.boxShadow = 'none';
+              }
             }}
             onBlur={(e) => {
               e.target.style.borderColor = ds.colors.gray[300];
               e.target.style.boxShadow = 'none';
+              e.target.style.transform = 'translateY(0)';
             }}
           />
           <button
@@ -88,16 +102,18 @@ export function QueryBuilder({ query, setQuery }) {
               flexShrink: 0
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = ds.colors.gray[200];
-              e.currentTarget.style.borderColor = ds.colors.gray[400];
-              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.background = '#fee2e2';
+              e.currentTarget.style.borderColor = ds.colors.error;
+              e.currentTarget.style.color = ds.colors.error;
               e.currentTarget.style.boxShadow = ds.shadows.md;
+              e.currentTarget.style.transform = 'translateY(-1px)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = ds.colors.gray[100];
               e.currentTarget.style.borderColor = ds.colors.gray[300];
-              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.color = ds.colors.text.secondary;
               e.currentTarget.style.boxShadow = ds.shadows.sm;
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
             Reset

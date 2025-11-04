@@ -1,4 +1,4 @@
-// src/components/NiiViewer.jsx - Updated with new button styles/
+// src/components/NiiViewer.jsx - Updated with Option B (single border glow)
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as nifti from 'nifti-reader-js';
 import { API_BASE } from '../api';
@@ -454,6 +454,27 @@ export function NiiViewer({ query }) {
                     textAlign: 'center',
                     fontWeight: ds.fontWeight.medium
                   }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'transparent';
+                    e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
+                    e.target.style.transform = 'translateY(-0.5px)';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.target) {
+                      e.target.style.borderColor = ds.colors.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.target) {
+                      e.target.style.borderColor = ds.colors.gray[300];
+                    }
+                  }}
+                  onBlur={(e) => {
+                    commitCoord(axis);
+                    e.target.style.borderColor = ds.colors.gray[300];
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
                 />
               </div>
             ))}
@@ -476,34 +497,29 @@ export function NiiViewer({ query }) {
               </label>
               <div style={{
                 display: 'flex',
-                gap: ds.spacing.xs
+                gap: ds.spacing.xs,
+                background: ds.colors.gray[100],
+                padding: ds.spacing.xs,
+                borderRadius: ds.borderRadius.lg
               }}>
                 <button
                   onClick={() => setThrMode('pctl')}
                   style={{
                     flex: 1,
-                    padding: `${ds.spacing.sm} ${ds.spacing.md}`,
-                    background: thrMode === 'pctl' ? ds.colors.primary[600] : ds.colors.background.primary,
-                    color: thrMode === 'pctl' ? ds.colors.text.inverse : ds.colors.text.primary,
-                    border: `1.5px solid ${thrMode === 'pctl' ? ds.colors.primary[600] : ds.colors.gray[300]}`,
+                    padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
+                    background: thrMode === 'pctl' 
+                      ? ds.colors.background.primary
+                      : 'transparent',
+                    color: thrMode === 'pctl' 
+                      ? ds.colors.primary[600]
+                      : ds.colors.text.secondary,
+                    border: 'none',
                     borderRadius: ds.borderRadius.md,
                     fontSize: ds.fontSize.sm,
                     fontWeight: ds.fontWeight.semibold,
                     cursor: 'pointer',
-                    transition: ds.transitions.fast,
+                    transition: 'all 0.2s ease',
                     boxShadow: thrMode === 'pctl' ? ds.shadows.sm : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (thrMode !== 'pctl') {
-                      e.currentTarget.style.background = ds.colors.gray[50];
-                      e.currentTarget.style.borderColor = ds.colors.primary[500];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (thrMode !== 'pctl') {
-                      e.currentTarget.style.background = ds.colors.background.primary;
-                      e.currentTarget.style.borderColor = ds.colors.gray[300];
-                    }
                   }}
                 >
                   Percentile
@@ -512,28 +528,20 @@ export function NiiViewer({ query }) {
                   onClick={() => setThrMode('value')}
                   style={{
                     flex: 1,
-                    padding: `${ds.spacing.sm} ${ds.spacing.md}`,
-                    background: thrMode === 'value' ? ds.colors.primary[600] : ds.colors.background.primary,
-                    color: thrMode === 'value' ? ds.colors.text.inverse : ds.colors.text.primary,
-                    border: `1.5px solid ${thrMode === 'value' ? ds.colors.primary[600] : ds.colors.gray[300]}`,
+                    padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
+                    background: thrMode === 'value' 
+                      ? ds.colors.background.primary
+                      : 'transparent',
+                    color: thrMode === 'value' 
+                      ? ds.colors.primary[600]
+                      : ds.colors.text.secondary,
+                    border: 'none',
                     borderRadius: ds.borderRadius.md,
                     fontSize: ds.fontSize.sm,
                     fontWeight: ds.fontWeight.semibold,
                     cursor: 'pointer',
-                    transition: ds.transitions.fast,
+                    transition: 'all 0.2s ease',
                     boxShadow: thrMode === 'value' ? ds.shadows.sm : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (thrMode !== 'value') {
-                      e.currentTarget.style.background = ds.colors.gray[50];
-                      e.currentTarget.style.borderColor = ds.colors.primary[500];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (thrMode !== 'value') {
-                      e.currentTarget.style.background = ds.colors.background.primary;
-                      e.currentTarget.style.borderColor = ds.colors.gray[300];
-                    }
                   }}
                 >
                   Value
@@ -562,6 +570,26 @@ export function NiiViewer({ query }) {
                     width: '100%',
                     fontSize: ds.fontSize.sm
                   }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'transparent';
+                    e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
+                    e.target.style.transform = 'translateY(-0.5px)';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.target) {
+                      e.target.style.borderColor = ds.colors.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.target) {
+                      e.target.style.borderColor = ds.colors.gray[300];
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = ds.colors.gray[300];
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'translateY(0)';
+                  }}
                 />
               </div>
             ) : (
@@ -586,6 +614,26 @@ export function NiiViewer({ query }) {
                     ...ds.components.input,
                     width: '100%',
                     fontSize: ds.fontSize.sm
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'transparent';
+                    e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
+                    e.target.style.transform = 'translateY(-0.5px)';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.target) {
+                      e.target.style.borderColor = ds.colors.gray[400];
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.target) {
+                      e.target.style.borderColor = ds.colors.gray[300];
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = ds.colors.gray[300];
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'translateY(0)';
                   }}
                 />
               </div>
@@ -631,6 +679,26 @@ export function NiiViewer({ query }) {
                   ...ds.components.input,
                   width: '100%',
                   fontSize: ds.fontSize.sm
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'transparent';
+                  e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
+                  e.target.style.transform = 'translateY(-0.5px)';
+                }}
+                onMouseEnter={(e) => {
+                  if (document.activeElement !== e.target) {
+                    e.target.style.borderColor = ds.colors.gray[400];
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (document.activeElement !== e.target) {
+                    e.target.style.borderColor = ds.colors.gray[300];
+                  }
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = ds.colors.gray[300];
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'translateY(0)';
                 }}
               />
             </div>
