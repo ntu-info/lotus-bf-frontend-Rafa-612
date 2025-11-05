@@ -1,4 +1,4 @@
-// src/components/SavedStudies.jsx - Updated with Reset button
+// src/components/SavedStudies.jsx - Updated with Reset button and orange hover effects
 import ds from '../styles/designSystem';
 
 export function SavedStudies({ savedStudies, onRemove, onExport }) {
@@ -111,9 +111,9 @@ export function SavedStudies({ savedStudies, onRemove, onExport }) {
             }}
             onMouseEnter={(e) => {
               if (savedStudies.length > 0) {
-                e.currentTarget.style.background = '#fee2e2';
-                e.currentTarget.style.borderColor = ds.colors.error;
-                e.currentTarget.style.color = ds.colors.error;
+                e.currentTarget.style.background = '#ffedd5';  // ✅ 橘色背景（與 co-count 相同）
+                e.currentTarget.style.borderColor = '#fb923c';  // ✅ 橘色邊框（與 co-count 相同）
+                e.currentTarget.style.color = '#c2410c';  // ✅ 橘色文字（與 co-count 相同）
                 e.currentTarget.style.boxShadow = ds.shadows.md;
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }
@@ -274,8 +274,8 @@ export function SavedStudies({ savedStudies, onRemove, onExport }) {
                       flexShrink: 0
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = ds.colors.error + '20';
-                      e.currentTarget.style.color = ds.colors.error;
+                      e.currentTarget.style.background = '#ffedd5';  // ✅ 橘色背景（與 co-count 相同）
+                      e.currentTarget.style.color = '#c2410c';  // ✅ 橘色文字（與 co-count 相同）
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';
