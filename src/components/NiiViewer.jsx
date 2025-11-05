@@ -1,4 +1,4 @@
-// src/components/NiiViewer.jsx - Updated with Option B (single border glow)
+// src/components/NiiViewer.jsx - Enhanced Visual Design
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as nifti from 'nifti-reader-js';
 import { API_BASE } from '../api';
@@ -15,19 +15,202 @@ function isStandardMNI2mm(dims, voxelMM) {
 
 const MNI2MM = { x0: 90, y0: -126, z0: -72, vx: 2, vy: 2, vz: 2 };
 
+// Helper input components with Query Builder style animations
+function CoordinateInput({ label, value, setValue, axis, commitCoord }) {
+  const [isFocused, setIsFocused] = useState(false);
+  return (
+    <div>
+      <label style={{
+        display: 'block',
+        fontSize: ds.fontSize.xs,
+        fontWeight: ds.fontWeight.semibold,
+        color: ds.colors.text.secondary,
+        marginBottom: ds.spacing.xs
+      }}>
+        {label}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if(e.key==='Enter') commitCoord(axis) }}
+        style={{
+          width: '100%',
+          padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+          borderRadius: ds.borderRadius.md,
+          border: `2px solid ${isFocused ? ds.colors.primary[500] : ds.colors.gray[200]}`,
+          fontSize: ds.fontSize.sm,
+          textAlign: 'center',
+          fontWeight: ds.fontWeight.medium,
+          color: ds.colors.text.primary,
+          background: isFocused ? ds.colors.background.primary : ds.colors.gray[50],
+          transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+          outline: 'none',
+          boxShadow: isFocused 
+            ? `0 0 0 3px ${ds.colors.primary[50]}, 0 1px 2px 0 rgba(0, 0, 0, 0.05)`
+            : '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+        }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false);
+          commitCoord(axis);
+        }}
+        onMouseEnter={(e) => {
+          if (!isFocused) {
+            e.target.style.borderColor = ds.colors.gray[300];
+            e.target.style.background = ds.colors.background.primary;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isFocused) {
+            e.target.style.borderColor = ds.colors.gray[200];
+            e.target.style.background = ds.colors.gray[50];
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function PercentileInput({ value, onChange }) {
+  const [isFocused, setIsFocused] = useState(false);
+  return (
+    <input
+      type='number'
+      step={0.5}
+      value={value}
+      onChange={e => onChange(Number(e.target.value) || 95)}
+      style={{
+        width: '100%',
+        padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+        borderRadius: ds.borderRadius.md,
+        border: `2px solid ${isFocused ? ds.colors.primary[500] : ds.colors.gray[200]}`,
+        fontSize: ds.fontSize.sm,
+        color: ds.colors.text.primary,
+        background: isFocused ? ds.colors.background.primary : ds.colors.gray[50],
+        transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        outline: 'none',
+        boxShadow: isFocused 
+          ? `0 0 0 3px ${ds.colors.primary[50]}, 0 1px 2px 0 rgba(0, 0, 0, 0.05)`
+          : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        fontWeight: ds.fontWeight.medium
+      }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      onMouseEnter={(e) => {
+        if (!isFocused) {
+          e.target.style.borderColor = ds.colors.gray[300];
+          e.target.style.background = ds.colors.background.primary;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isFocused) {
+          e.target.style.borderColor = ds.colors.gray[200];
+          e.target.style.background = ds.colors.gray[50];
+        }
+      }}
+    />
+  );
+}
+
+function FWHMInput({ value, onChange }) {
+  const [isFocused, setIsFocused] = useState(false);
+  return (
+    <input
+      type='number'
+      step='0.5'
+      value={value}
+      onChange={e => onChange(Number(e.target.value) || 0)}
+      style={{
+        width: '100%',
+        padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+        borderRadius: ds.borderRadius.md,
+        border: `2px solid ${isFocused ? ds.colors.primary[500] : ds.colors.gray[200]}`,
+        fontSize: ds.fontSize.sm,
+        color: ds.colors.text.primary,
+        background: isFocused ? ds.colors.background.primary : ds.colors.gray[50],
+        transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        outline: 'none',
+        boxShadow: isFocused 
+          ? `0 0 0 3px ${ds.colors.primary[50]}, 0 1px 2px 0 rgba(0, 0, 0, 0.05)`
+          : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        fontWeight: ds.fontWeight.medium
+      }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      onMouseEnter={(e) => {
+        if (!isFocused) {
+          e.target.style.borderColor = ds.colors.gray[300];
+          e.target.style.background = ds.colors.background.primary;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isFocused) {
+          e.target.style.borderColor = ds.colors.gray[200];
+          e.target.style.background = ds.colors.gray[50];
+        }
+      }}
+    />
+  );
+}
+
+function ThresholdValueInput({ value, onChange }) {
+  const [isFocused, setIsFocused] = useState(false);
+  return (
+    <input
+      type='number'
+      step={0.1}
+      value={value}
+      onChange={e => onChange(Number(e.target.value) || 0)}
+      style={{
+        width: '100%',
+        padding: `${ds.spacing.sm} ${ds.spacing.md}`,
+        borderRadius: ds.borderRadius.md,
+        border: `2px solid ${isFocused ? ds.colors.primary[500] : ds.colors.gray[200]}`,
+        fontSize: ds.fontSize.sm,
+        color: ds.colors.text.primary,
+        background: isFocused ? ds.colors.background.primary : ds.colors.gray[50],
+        transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        outline: 'none',
+        boxShadow: isFocused 
+          ? `0 0 0 3px ${ds.colors.primary[50]}, 0 1px 2px 0 rgba(0, 0, 0, 0.05)`
+          : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        fontWeight: ds.fontWeight.medium
+      }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      onMouseEnter={(e) => {
+        if (!isFocused) {
+          e.target.style.borderColor = ds.colors.gray[300];
+          e.target.style.background = ds.colors.background.primary;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isFocused) {
+          e.target.style.borderColor = ds.colors.gray[200];
+          e.target.style.background = ds.colors.gray[50];
+        }
+      }}
+    />
+  );
+}
+
 export function NiiViewer({ query }) {
   const [loadingBG, setLoadingBG] = useState(false);
   const [loadingMap, setLoadingMap] = useState(false);
   const [errBG, setErrBG] = useState('');
   const [errMap, setErrMap] = useState('');
 
-  const [voxel, setVoxel] = useState(2.0);
+  // Fixed parameters (no longer adjustable by user)
+  const voxel = 2.0;
+  const r = 6.0;
+  const posOnly = true;
+  const kernel = 'gauss';
+
+  // User-adjustable parameters
   const [fwhm, setFwhm] = useState(10.0);
-  const [kernel, setKernel] = useState('gauss');
-  const [r, setR] = useState(6.0);
 
   const [overlayAlpha, setOverlayAlpha] = useState(0.5);
-  const [posOnly, setPosOnly] = useState(true);
   const [useAbs, setUseAbs] = useState(false);
   const [thrMode, setThrMode] = useState('pctl');
   const [pctl, setPctl] = useState(95);
@@ -278,9 +461,13 @@ export function NiiViewer({ query }) {
     }
     ctx.putImageData(img, 0, 0);
 
+    // Enhanced crosshair with elegant glow effect
     ctx.save();
-    ctx.strokeStyle = '#10b981';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#60a5fa';
+    ctx.shadowBlur = 6;
+    
     let cx = 0, cy = 0;
     if (axis === 'z') {
       cx = Math.max(0, Math.min(w-1, (X_RIGHT_ON_SCREEN_RIGHT ? (w - 1 - ix) : ix)));
@@ -345,12 +532,14 @@ export function NiiViewer({ query }) {
     <div style={{
       ...ds.createStyles.card(),
       padding: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      background: 'linear-gradient(to bottom, #ffffff, #f9fafb)'
     }}>
+      {/* Header Section */}
       <div style={{
-        padding: ds.spacing.xl,
+        padding: `${ds.spacing.md} ${ds.spacing.lg}`,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
-        background: ds.colors.primary[50]
+        background: `linear-gradient(135deg, ${ds.colors.primary[50]} 0%, ${ds.colors.primary[100]} 100%)`
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -361,7 +550,7 @@ export function NiiViewer({ query }) {
               margin: 0,
               lineHeight: ds.lineHeight.tight
             }}>
-              NIfTI visualization
+              NIfTI Visualization
             </h2>
             <p style={{
               fontSize: ds.fontSize.xs,
@@ -369,7 +558,7 @@ export function NiiViewer({ query }) {
               margin: `${ds.spacing.xs} 0 0 0`,
               fontWeight: ds.fontWeight.medium
             }}>
-              Ajust the setting based on your needs.
+              Adjust the settings based on your needs
             </p>
           </div>
           {query && mapUrl && (
@@ -381,26 +570,24 @@ export function NiiViewer({ query }) {
                 alignItems: 'center',
                 gap: ds.spacing.sm,
                 padding: `${ds.spacing.sm} ${ds.spacing.lg}`,
-                background: ds.colors.primary[600],
+                background: `linear-gradient(135deg, ${ds.colors.primary[600]}, ${ds.colors.primary[700]})`,
                 color: ds.colors.text.inverse,
                 border: 'none',
                 borderRadius: ds.borderRadius.md,
                 fontSize: ds.fontSize.xs,
                 fontWeight: ds.fontWeight.semibold,
                 cursor: 'pointer',
-                transition: ds.transitions.fast,
-                boxShadow: ds.shadows.sm,
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
                 textDecoration: 'none'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = ds.colors.primary[700];
-                e.currentTarget.style.boxShadow = ds.shadows.md;
-                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.35)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = ds.colors.primary[600];
-                e.currentTarget.style.boxShadow = ds.shadows.sm;
                 e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(37, 99, 235, 0.25)';
               }}
             >
               <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,79 +599,36 @@ export function NiiViewer({ query }) {
         </div>
       </div>
 
+      {/* Main Content */}
       <div style={{ padding: ds.spacing.xl }}>
+        {/* Controls Section */}
         <div style={{
-          background: ds.colors.gray[50],
+          background: `linear-gradient(to bottom right, ${ds.colors.gray[50]}, #ffffff)`,
           borderRadius: ds.borderRadius.md,
           padding: ds.spacing.lg,
           marginBottom: ds.spacing.lg,
-          border: `1px solid ${ds.colors.gray[200]}`
+          border: `1px solid ${ds.colors.gray[200]}`,
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
         }}>
+          {/* Coordinate Inputs */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
             gap: ds.spacing.md,
             marginBottom: ds.spacing.lg
           }}>
-            {[
-              { label: 'X (mm)', value: cx, setValue: setCx, axis: 'x' },
-              { label: 'Y (mm)', value: cy, setValue: setCy, axis: 'y' },
-              { label: 'Z (mm)', value: cz, setValue: setCz, axis: 'z' }
-            ].map(({ label, value, setValue, axis }) => (
-              <div key={axis}>
-                <label style={{
-                  display: 'block',
-                  fontSize: ds.fontSize.xs,
-                  fontWeight: ds.fontWeight.semibold,
-                  color: ds.colors.text.secondary,
-                  marginBottom: ds.spacing.xs
-                }}>
-                  {label}
-                </label>
-                <input
-                  type="text"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  onBlur={() => commitCoord(axis)}
-                  onKeyDown={(e) => { if(e.key==='Enter') commitCoord(axis) }}
-                  style={{
-                    ...ds.components.input,
-                    width: '100%',
-                    fontSize: ds.fontSize.sm,
-                    textAlign: 'center',
-                    fontWeight: ds.fontWeight.medium
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'transparent';
-                    e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
-                    e.target.style.transform = 'translateY(-0.5px)';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (document.activeElement !== e.target) {
-                      e.target.style.borderColor = ds.colors.gray[400];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (document.activeElement !== e.target) {
-                      e.target.style.borderColor = ds.colors.gray[300];
-                    }
-                  }}
-                  onBlur={(e) => {
-                    commitCoord(axis);
-                    e.target.style.borderColor = ds.colors.gray[300];
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                />
-              </div>
-            ))}
+            <CoordinateInput label="X (mm)" value={cx} setValue={setCx} axis="x" commitCoord={commitCoord} />
+            <CoordinateInput label="Y (mm)" value={cy} setValue={setCy} axis="y" commitCoord={commitCoord} />
+            <CoordinateInput label="Z (mm)" value={cz} setValue={setCz} axis="z" commitCoord={commitCoord} />
           </div>
 
+          {/* Other Controls */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
             gap: ds.spacing.md
           }}>
+            {/* Threshold Mode */}
             <div>
               <label style={{
                 display: 'block',
@@ -549,6 +693,7 @@ export function NiiViewer({ query }) {
               </div>
             </div>
 
+            {/* Threshold Value/Percentile */}
             {thrMode === 'value' ? (
               <div>
                 <label style={{
@@ -558,39 +703,9 @@ export function NiiViewer({ query }) {
                   color: ds.colors.text.secondary,
                   marginBottom: ds.spacing.xs
                 }}>
-                  Threshold
+                  Threshold Value
                 </label>
-                <input
-                  type='number'
-                  step='0.01'
-                  value={thrValue}
-                  onChange={e=>setThrValue(Number(e.target.value))}
-                  style={{
-                    ...ds.components.input,
-                    width: '100%',
-                    fontSize: ds.fontSize.sm
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'transparent';
-                    e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
-                    e.target.style.transform = 'translateY(-0.5px)';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (document.activeElement !== e.target) {
-                      e.target.style.borderColor = ds.colors.gray[400];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (document.activeElement !== e.target) {
-                      e.target.style.borderColor = ds.colors.gray[300];
-                    }
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = ds.colors.gray[300];
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                />
+                <ThresholdValueInput value={thrValue} onChange={setThrValue} />
               </div>
             ) : (
               <div>
@@ -603,63 +718,81 @@ export function NiiViewer({ query }) {
                 }}>
                   Percentile
                 </label>
-                <input
-                  type='number'
-                  min={50}
-                  max={99.9}
-                  step={0.5}
-                  value={pctl}
-                  onChange={e=>setPctl(Number(e.target.value)||95)}
-                  style={{
-                    ...ds.components.input,
-                    width: '100%',
-                    fontSize: ds.fontSize.sm
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'transparent';
-                    e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
-                    e.target.style.transform = 'translateY(-0.5px)';
-                  }}
-                  onMouseEnter={(e) => {
-                    if (document.activeElement !== e.target) {
-                      e.target.style.borderColor = ds.colors.gray[400];
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (document.activeElement !== e.target) {
-                      e.target.style.borderColor = ds.colors.gray[300];
-                    }
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = ds.colors.gray[300];
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.transform = 'translateY(0)';
-                  }}
-                />
+                <PercentileInput value={pctl} onChange={setPctl} />
               </div>
             )}
 
-            <div>
-              <label style={{
-                display: 'block',
-                fontSize: ds.fontSize.xs,
-                fontWeight: ds.fontWeight.semibold,
-                color: ds.colors.text.secondary,
-                marginBottom: ds.spacing.xs
+            {/* Overlay Alpha - Enhanced Design */}
+            <div style={{ gridColumn: 'span 2' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: ds.spacing.sm
               }}>
-                Overlay Alpha: {overlayAlpha.toFixed(2)}
-              </label>
-              <input
-                type='range'
-                min={0}
-                max={1}
-                step={0.05}
-                value={overlayAlpha}
-                onChange={e=>setOverlayAlpha(Number(e.target.value))}
-                style={{ width: '100%', marginTop: ds.spacing.xs }}
-              />
+                <label style={{
+                  fontSize: ds.fontSize.xs,
+                  fontWeight: ds.fontWeight.semibold,
+                  color: ds.colors.text.secondary
+                }}>
+                  Overlay Transparency
+                </label>
+                <div style={{
+                  background: ds.colors.primary[100],
+                  color: ds.colors.primary[700],
+                  padding: `${ds.spacing.xs} ${ds.spacing.md}`,
+                  borderRadius: ds.borderRadius.md,
+                  fontSize: ds.fontSize.sm,
+                  fontWeight: ds.fontWeight.bold,
+                  minWidth: '60px',
+                  textAlign: 'center'
+                }}>
+                  {Math.round(overlayAlpha * 100)}%
+                </div>
+              </div>
+              <div style={{ position: 'relative' }}>
+                {/* Visual indicator bar */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: `linear-gradient(to right, 
+                    ${ds.colors.gray[300]} 0%, 
+                    ${ds.colors.primary[400]} 50%, 
+                    ${ds.colors.error} 100%)`,
+                  borderRadius: ds.borderRadius.full,
+                  opacity: 0.6
+                }} />
+                <input
+                  type='range'
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={overlayAlpha}
+                  onChange={e=>setOverlayAlpha(Number(e.target.value))}
+                  style={{ 
+                    width: '100%',
+                    accentColor: ds.colors.primary[600],
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: ds.spacing.xs,
+                  fontSize: ds.fontSize.xs,
+                  color: ds.colors.text.tertiary
+                }}>
+                  <span>Transparent</span>
+                  <span>Balanced</span>
+                  <span>Opaque</span>
+                </div>
+              </div>
             </div>
 
+            {/* FWHM */}
             <div>
               <label style={{
                 display: 'block',
@@ -670,47 +803,24 @@ export function NiiViewer({ query }) {
               }}>
                 FWHM
               </label>
-              <input
-                type='number'
-                step='0.5'
-                value={fwhm}
-                onChange={e=>setFwhm(Number(e.target.value)||0)}
-                style={{
-                  ...ds.components.input,
-                  width: '100%',
-                  fontSize: ds.fontSize.sm
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = 'transparent';
-                  e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.5)';
-                  e.target.style.transform = 'translateY(-0.5px)';
-                }}
-                onMouseEnter={(e) => {
-                  if (document.activeElement !== e.target) {
-                    e.target.style.borderColor = ds.colors.gray[400];
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (document.activeElement !== e.target) {
-                    e.target.style.borderColor = ds.colors.gray[300];
-                  }
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = ds.colors.gray[300];
-                  e.target.style.boxShadow = 'none';
-                  e.target.style.transform = 'translateY(0)';
-                }}
-              />
+              <FWHMInput value={fwhm} onChange={setFwhm} />
             </div>
           </div>
         </div>
 
+        {/* Loading State */}
         {(loadingBG || loadingMap) && (
-          <div style={{ padding: ds.spacing['2xl'], textAlign: 'center' }}>
+          <div style={{ 
+            padding: ds.spacing['2xl'], 
+            textAlign: 'center',
+            background: `linear-gradient(to bottom, ${ds.colors.gray[50]}, #ffffff)`,
+            borderRadius: ds.borderRadius.lg,
+            border: `1px solid ${ds.colors.gray[200]}`
+          }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              border: `3px solid ${ds.colors.primary[200]}`,
+              width: '48px',
+              height: '48px',
+              border: `4px solid ${ds.colors.primary[100]}`,
               borderTopColor: ds.colors.primary[600],
               borderRadius: ds.borderRadius.full,
               margin: '0 auto',
@@ -719,54 +829,89 @@ export function NiiViewer({ query }) {
             <p style={{
               color: ds.colors.text.tertiary,
               fontSize: ds.fontSize.sm,
-              marginTop: ds.spacing.md,
-              fontWeight: ds.fontWeight.medium
+              marginTop: ds.spacing.lg,
+              fontWeight: ds.fontWeight.semibold
             }}>
               Loading brain data...
             </p>
           </div>
         )}
 
+        {/* Error State */}
         {(errBG || errMap) && (
           <div style={{
             padding: ds.spacing.lg,
             borderRadius: ds.borderRadius.md,
-            border: `1px solid ${ds.colors.error}40`,
-            background: `${ds.colors.error}10`,
+            border: `2px solid ${ds.colors.error}40`,
+            background: `linear-gradient(to bottom right, ${ds.colors.error}10, ${ds.colors.error}05)`,
             color: ds.colors.error,
             fontSize: ds.fontSize.sm,
-            marginBottom: ds.spacing.lg
+            marginBottom: ds.spacing.lg,
+            boxShadow: `0 2px 8px ${ds.colors.error}20`
           }}>
-            {errBG && <div><strong>Background:</strong> {errBG}</div>}
+            {errBG && <div style={{ marginBottom: ds.spacing.sm }}><strong>Background:</strong> {errBG}</div>}
             {errMap && <div><strong>Map:</strong> {errMap}</div>}
           </div>
         )}
 
+        {/* Brain Slices */}
         {nx && !loadingBG && !loadingMap && (
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: ds.spacing.md
+            gap: ds.spacing.lg
           }}>
             {[
               { key: 'y', name: 'Coronal', canvasRef: canvases[1] },
               { key: 'x', name: 'Sagittal', canvasRef: canvases[2] },
               { key: 'z', name: 'Axial', canvasRef: canvases[0] }
             ].map(({ key, name, canvasRef }) => (
-              <div key={key} style={{
-                background: ds.colors.gray[900],
-                borderRadius: ds.borderRadius.md,
-                padding: ds.spacing.sm,
-                border: `1px solid ${ds.colors.gray[200]}`
-              }}>
+              <div 
+                key={key} 
+                style={{
+                  background: ds.colors.gray[900],
+                  borderRadius: ds.borderRadius.lg,
+                  padding: ds.spacing.md,
+                  border: `2px solid ${ds.colors.gray[800]}`,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.15) inset';
+                  e.currentTarget.style.borderColor = ds.colors.primary[500];
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
+                  e.currentTarget.style.borderColor = ds.colors.gray[800];
+                }}
+              >
+                {/* Gradient overlay for depth */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%)',
+                  pointerEvents: 'none',
+                  borderRadius: ds.borderRadius.lg
+                }} />
+                
                 <p style={{
                   fontSize: ds.fontSize.xs,
-                  fontWeight: ds.fontWeight.semibold,
-                  color: ds.colors.gray[300],
+                  fontWeight: ds.fontWeight.bold,
+                  color: ds.colors.primary[400],
                   marginBottom: ds.spacing.sm,
                   textAlign: 'center',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  letterSpacing: '0.1em',
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                  position: 'relative',
+                  zIndex: 1
                 }}>
                   {name}
                 </p>
@@ -776,9 +921,12 @@ export function NiiViewer({ query }) {
                   style={{
                     width: '100%',
                     height: 'auto',
-                    borderRadius: ds.borderRadius.sm,
+                    borderRadius: ds.borderRadius.md,
                     cursor: 'crosshair',
-                    display: 'block'
+                    display: 'block',
+                    position: 'relative',
+                    zIndex: 1,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                   }}
                 />
               </div>
@@ -790,6 +938,40 @@ export function NiiViewer({ query }) {
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: ${ds.colors.primary[600]};
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+          background: ${ds.colors.primary[700]};
+          transform: scale(1.1);
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: ${ds.colors.primary[600]};
+          cursor: pointer;
+          border: none;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-moz-range-thumb:hover {
+          background: ${ds.colors.primary[700]};
+          transform: scale(1.1);
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
         }
       `}</style>
     </div>
