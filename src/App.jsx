@@ -65,23 +65,26 @@ export default function App() {
           maxWidth: '100%',
           margin: '0 auto'
         }}>
-          <h1 style={{
-            fontSize: ds.fontSize['2xl'],
-            fontWeight: ds.fontWeight.bold,
-            color: ds.colors.primary[600],
-            margin: 0,
-            letterSpacing: '-0.025em'
-          }}>
-            LoTUS-BF
-          </h1>
-          <p style={{
-            fontSize: ds.fontSize.sm,
-            color: ds.colors.text.tertiary,
-            margin: `${ds.spacing.xs} 0 0 0`,
-            fontWeight: ds.fontWeight.medium
-          }}>
-            Location-or-Term Unified Search for Brain Functions
-          </p>
+          {/* Title and Subtitle */}
+          <div>
+            <h1 style={{
+              fontSize: ds.fontSize['2xl'],
+              fontWeight: ds.fontWeight.bold,
+              color: ds.colors.text.primary,  // 改為黑色
+              margin: 0,
+              letterSpacing: '-0.025em'
+            }}>
+              SynapseHub
+            </h1>
+            <p style={{
+              fontSize: ds.fontSize.sm,
+              color: ds.colors.text.tertiary,
+              margin: `${ds.spacing.xs} 0 0 0`,
+              fontWeight: ds.fontWeight.medium
+            }}>
+              Unified Neuroscience Research Platform
+            </p>
+          </div>
         </div>
       </header>
 
@@ -169,6 +172,25 @@ export default function App() {
                 e.currentTarget.style.textDecoration = 'none';
               }}
             >
+              About
+            </a>
+            <a
+              href="#"
+              style={{
+                color: ds.colors.primary[600],
+                textDecoration: 'none',
+                fontWeight: ds.fontWeight.medium,
+                transition: ds.transitions.fast
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = ds.colors.primary[700];
+                e.currentTarget.style.textDecoration = 'underline';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = ds.colors.primary[600];
+                e.currentTarget.style.textDecoration = 'none';
+              }}
+            >
               Documentation
             </a>
           </div>
@@ -177,12 +199,12 @@ export default function App() {
             gap: ds.spacing.sm,
             alignItems: 'center'
           }}>
-            <span>Powered by</span>
+            <span>Designed by</span>
             <span style={{ 
               fontWeight: ds.fontWeight.semibold,
               color: ds.colors.text.secondary 
             }}>
-              Neurosynth
+              Rafa Zhong
             </span>
           </div>
         </div>

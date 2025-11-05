@@ -1,4 +1,4 @@
-// src/components/SavedStudies.jsx - Updated with Reset button/
+// src/components/SavedStudies.jsx - Updated with Reset button
 import ds from '../styles/designSystem';
 
 export function SavedStudies({ savedStudies, onRemove, onExport }) {
@@ -18,7 +18,7 @@ export function SavedStudies({ savedStudies, onRemove, onExport }) {
     }}>
       {/* Header */}
       <div style={{
-        padding: ds.spacing.xl,
+        padding: `${ds.spacing.md} ${ds.spacing.lg}`,
         borderBottom: `1px solid ${ds.colors.gray[200]}`,
         background: ds.colors.primary[50],
         display: 'flex',
@@ -139,7 +139,7 @@ export function SavedStudies({ savedStudies, onRemove, onExport }) {
       {/* Content */}
       <div style={{
         overflowY: 'auto',
-        maxHeight: '650px'
+        maxHeight: '400px'
       }}>
         {savedStudies.length === 0 ? (
           <div style={{
@@ -193,7 +193,7 @@ export function SavedStudies({ savedStudies, onRemove, onExport }) {
                   background: ds.colors.background.primary
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = ds.colors.primary[50];
+                  e.currentTarget.style.background = ds.colors.gray[50];
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = ds.colors.background.primary;
@@ -232,63 +232,55 @@ export function SavedStudies({ savedStudies, onRemove, onExport }) {
                       <span style={{ fontWeight: ds.fontWeight.medium, color: ds.colors.text.secondary }}>
                         {study.journal || 'Unknown'}
                       </span>
-                      <span style={{ color: ds.colors.gray[300] }}>•</span>
+                      <span>•</span>
                       <span>{study.year || 'N/A'}</span>
                       {study.pmid && (
                         <>
-                          <span style={{ color: ds.colors.gray[300] }}>•</span>
+                          <span>•</span>
                           <a
                             href={`https://pubmed.ncbi.nlm.nih.gov/${study.pmid}/`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: ds.spacing.xs,
                               color: ds.colors.primary[600],
                               textDecoration: 'none',
-                              fontWeight: ds.fontWeight.medium,
-                              transition: ds.transitions.fast
+                              fontWeight: ds.fontWeight.medium
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.color = ds.colors.primary[700];
                               e.currentTarget.style.textDecoration = 'underline';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.color = ds.colors.primary[600];
                               e.currentTarget.style.textDecoration = 'none';
                             }}
                           >
-                            <svg style={{ width: '12px', height: '12px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            View
+                            PMID: {study.pmid}
                           </a>
                         </>
                       )}
                     </div>
                   </div>
+                  
+                  {/* Remove button */}
                   <button
                     onClick={() => onRemove(study.savedId)}
                     style={{
-                      flexShrink: 0,
                       padding: ds.spacing.sm,
-                      borderRadius: ds.borderRadius.md,
-                      border: 'none',
                       background: 'transparent',
-                      color: ds.colors.gray[400],
+                      color: ds.colors.text.tertiary,
+                      border: 'none',
+                      borderRadius: ds.borderRadius.md,
                       cursor: 'pointer',
-                      transition: ds.transitions.fast
+                      transition: ds.transitions.fast,
+                      flexShrink: 0
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = `${ds.colors.error}15`;
+                      e.currentTarget.style.background = ds.colors.error + '20';
                       e.currentTarget.style.color = ds.colors.error;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = ds.colors.gray[400];
+                      e.currentTarget.style.color = ds.colors.text.tertiary;
                     }}
-                    title="Remove from saved"
                   >
                     <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
