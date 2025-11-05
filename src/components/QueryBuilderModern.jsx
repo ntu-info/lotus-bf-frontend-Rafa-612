@@ -1,9 +1,10 @@
-// src/components/QueryBuilderModern.jsx - Enhanced with perfect search bar
+// src/components/QueryBuilderModern.jsx - Enhanced with coordinate query hints
 import { useRef, useState } from 'react';
 import ds from '../styles/designSystem';
 
 export function QueryBuilder({ query, setQuery }) {
   const [isFocused, setIsFocused] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const inputRef = useRef(null);
 
   const handleOperator = (op) => {
@@ -51,24 +52,111 @@ export function QueryBuilder({ query, setQuery }) {
         background: ds.colors.primary[50],
         flexShrink: 0
       }}>
-        <h2 style={{
-          fontSize: ds.fontSize.lg,
-          fontWeight: ds.fontWeight.bold,
-          color: ds.colors.text.primary,
-          margin: 0,
-          lineHeight: ds.lineHeight.tight
-        }}>
-          Query Builder
-        </h2>
-        <p style={{
-          fontSize: ds.fontSize.xs,
-          color: ds.colors.text.tertiary,
-          margin: `${ds.spacing.xs} 0 0 0`,
-          fontWeight: ds.fontWeight.medium
-        }}>
-          Build complex search queries
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div>
+            <h2 style={{
+              fontSize: ds.fontSize.lg,
+              fontWeight: ds.fontWeight.bold,
+              color: ds.colors.text.primary,
+              margin: 0,
+              lineHeight: ds.lineHeight.tight
+            }}>
+              Query Builder
+            </h2>
+            <p style={{
+              fontSize: ds.fontSize.xs,
+              color: ds.colors.text.tertiary,
+              margin: `${ds.spacing.xs} 0 0 0`,
+              fontWeight: ds.fontWeight.medium
+            }}>
+              Build complex search queries
+            </p>
+          </div>
+          
+          {/* Hint Toggle Button */}
+          <button
+            onClick={() => setShowHint(!showHint)}
+            style={{
+              padding: `${ds.spacing.xs} ${ds.spacing.sm}`,
+              background: showHint ? ds.colors.primary[100] : ds.colors.background.primary,
+              color: showHint ? ds.colors.primary[700] : ds.colors.text.secondary,
+              border: `1.5px solid ${showHint ? ds.colors.primary[300] : ds.colors.gray[300]}`,
+              borderRadius: ds.borderRadius.md,
+              fontSize: ds.fontSize.xs,
+              fontWeight: ds.fontWeight.semibold,
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: ds.spacing.xs
+            }}
+            onMouseEnter={(e) => {
+              if (!showHint) {
+                e.currentTarget.style.background = ds.colors.gray[100];
+                e.currentTarget.style.borderColor = ds.colors.gray[400];
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!showHint) {
+                e.currentTarget.style.background = ds.colors.background.primary;
+                e.currentTarget.style.borderColor = ds.colors.gray[300];
+              }
+            }}
+          >
+            <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Hints
+          </button>
+        </div>
       </div>
+
+      {/* Hint Panel - 展開時顯示 */}
+      {showHint && (
+        <div style={{
+          padding: ds.spacing.lg,
+          background: ds.colors.primary[25],
+          borderBottom: `1px solid ${ds.colors.primary[100]}`,
+          fontSize: ds.fontSize.sm,
+          color: ds.colors.text.secondary
+        }}>
+          <div style={{ marginBottom: ds.spacing.md }}>
+            <strong style={{ color: ds.colors.primary[700] }}>Basic Operators:</strong>
+            <ul style={{ margin: `${ds.spacing.xs} 0 0 0`, paddingLeft: ds.spacing.lg }}>
+              <li><code>emotion AND memory</code> - Both terms must appear</li>
+              <li><code>emotion OR memory</code> - Either term can appear</li>
+              <li><code>emotion NOT anxiety</code> - Must have emotion but not anxiety</li>
+            </ul>
+          </div>
+          
+          <div style={{ marginBottom: ds.spacing.md }}>
+            <strong style={{ color: ds.colors.primary[700] }}>Using Parentheses () for Complex Queries:</strong>
+            <ul style={{ margin: `${ds.spacing.xs} 0 0 0`, paddingLeft: ds.spacing.lg }}>
+              <li><code>emotion AND (amygdala OR hippocampus)</code> - Emotion with either brain region</li>
+              <li><code>emotion AND (amygdala NOT frontal cortex)</code> - Emotion and amygdala, but exclude frontal cortex</li>
+              <li><code>(fear OR anxiety) AND memory</code> - Either fear or anxiety, combined with memory</li>
+            </ul>
+          </div>
+          
+          <div>
+            <strong style={{ color: ds.colors.primary[700] }}>Coordinate Search:</strong>
+            <ul style={{ margin: `${ds.spacing.xs} 0 0 0`, paddingLeft: ds.spacing.lg }}>
+              <li><code>[-22,0,20]</code> - Search near this coordinate (MNI space)</li>
+              <li><code>[-22,0,20] NOT emotion</code> - Coordinate but exclude emotion studies</li>
+              <li><code>[0,-52,8] AND (memory OR learning)</code> - Coordinate with memory or learning</li>
+            </ul>
+          </div>
+          
+          <p style={{ 
+            marginTop: ds.spacing.md, 
+            fontSize: ds.fontSize.xs, 
+            color: ds.colors.text.tertiary,
+            fontStyle: 'italic'
+          }}>
+            💡 Tips: Use parentheses () to group terms and control search logic | Coordinates are in MNI space [x, y, z] format
+          </p>
+        </div>
+      )}
       
       {/* Content */}
       <div style={{ padding: `${ds.spacing.lg} ${ds.spacing.lg}` }}>
@@ -110,7 +198,7 @@ export function QueryBuilder({ query, setQuery }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="e.g., emotion AND memory NOT anxiety (⌘/)"
+            placeholder="e.g., emotion AND (amygdala NOT frontal) | [-22,0,20] (⌘/)"
             style={{
               width: '100%',
               padding: `${ds.spacing.md} ${ds.spacing.md} ${ds.spacing.md} 42px`,
@@ -159,24 +247,21 @@ export function QueryBuilder({ query, setQuery }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: isFocused ? ds.colors.gray[100] : 'transparent',
+                background: isFocused ? ds.colors.gray[200] : ds.colors.gray[100],
                 border: 'none',
-                borderRadius: ds.borderRadius.md,
+                borderRadius: ds.borderRadius.full,
+                color: ds.colors.text.secondary,
                 cursor: 'pointer',
-                color: ds.colors.gray[400],
                 transition: 'all 150ms ease',
-                zIndex: 1,
-                opacity: 0.8
+                zIndex: 2
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = ds.colors.gray[200];
-                e.currentTarget.style.color = ds.colors.gray[600];
-                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.background = ds.colors.gray[300];
+                e.currentTarget.style.color = ds.colors.text.primary;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = isFocused ? ds.colors.gray[100] : 'transparent';
-                e.currentTarget.style.color = ds.colors.gray[400];
-                e.currentTarget.style.opacity = '0.8';
+                e.currentTarget.style.background = isFocused ? ds.colors.gray[200] : ds.colors.gray[100];
+                e.currentTarget.style.color = ds.colors.text.secondary;
               }}
             >
               <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,18 +271,18 @@ export function QueryBuilder({ query, setQuery }) {
           )}
         </div>
 
-        {/* Boolean Operators */}
+        {/* Operator Buttons */}
         <div style={{
           display: 'flex',
-          gap: ds.spacing.xs,
+          gap: ds.spacing.sm,
           flexWrap: 'wrap'
         }}>
-          {['AND', 'OR', 'NOT', '(', ')'].map(op => (
+          {['AND', 'OR', 'NOT', '(', ')'].map((op) => (
             <button
               key={op}
               onClick={() => handleOperator(op)}
               style={{
-                minWidth: op === '(' || op === ')' ? '36px' : '56px',
+                flex: op === '(' || op === ')' ? '0 0 36px' : '0 0 56px',
                 padding: `${ds.spacing.xs} ${ds.spacing.md}`,
                 background: ds.colors.background.primary,
                 color: ds.colors.text.secondary,
